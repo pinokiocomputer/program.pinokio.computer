@@ -1,0 +1,193 @@
+body {
+  background: rgb(27, 28, 29);
+  color: white;
+}
+a.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  margin: 5px 5px 5px 0;
+  background: black;
+  text-decoration: none;
+  color: white;
+  border-radius: 10px;
+  font-weight: bold;
+}
+.sidebar {
+  background: none;
+  color: white;
+}
+blockquote {
+  border-left: 10px solid rgba(145,208,118,1) !important;
+  padding: 10px;
+  /*
+  background: rgba(154,205,50,0.1);
+  */
+  background: rgba(145,208,118,0.1);
+  color: rgba(255,255,255,0.9) !important;
+
+}
+.app-name {
+  display: none;
+}
+.markdown-section {
+  max-width: 800px;
+  margin: 0;
+}
+a.anchor:hover {
+ color: white; 
+}
+/*
+.markdown-section a {
+  width: 100%;
+}
+*/
+.markdown-section img {
+  background: rgba(255,255,255,0.1);
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 10px;
+}
+.markdown-section img.fixed {
+  height: 300px;
+  text-align: center;
+  display: block;
+  width: 100%;
+  object-fit: contain;
+}
+.markdown-section h1 {
+  font-size: 180px;
+  line-height: 140px;
+  letter-spacing: -4px;
+  /*
+  font-family: sans-serif;
+  letter-spacing: -10px;
+  */
+  /*
+  padding: 0 40px;
+  border-left: 40px solid white;
+  */
+  text-transform: uppercase;
+  font-family: "Micro 5", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+
+}
+.hidden {
+  display: none !important;
+}
+
+.markdown-section h2, .markdown h3, .markdown h4 {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
+  font-variation-settings: "slnt" 0;
+  text-transform: lowercase;
+}
+
+
+.markdown-section h2 {
+  letter-spacing: -5px;
+  font-size: 70px;
+  line-height: 70px;
+}
+
+.markdown-section h3 {
+  letter-spacing: -1px;
+  font-size: 50px;
+  line-height: 50px;
+}
+.markdown-section h4 {
+  letter-spacing: -1px;
+  font-size: 30px;
+  line-height: 30px;
+  /*
+  font-family: sans-serif;
+  */
+  display: inline-block;
+  margin: 15px 0 0;
+  padding-left: 10px;
+  border-left: 20px solid white;
+}
+.markdown-section h5 {
+  font-size: 20px;
+  line-height: 20px;
+  border-left: 15px solid white;
+  border-radius: 20px;
+  padding-left: 10px;
+  margin: 30px 0 0 0;
+}
+.markdown-section h4 a.anchor span {
+/*
+  color: rgb(145, 208, 118);
+  */
+}
+/*
+.markdown-section h4 a.anchor span {
+  color: #91d076;
+}
+*/
+a.anchor span {
+  color: white;
+  word-wrap: break-word;
+}
+.sidebar li {
+  margin: 0;
+}
+.sidebar ul li.active a {
+  color: white;
+}
+.sidebar ul li a {
+  color: white;
+  line-height: 22px;
+}
+.markdown-section h6 a.anchor span {
+  color: #91d076;
+}
+.markdown-section h6 {
+  padding: 5px 10px;
+  border-left: 6px solid #91d076;
+  margin: 0;
+}
+.markdown-section>:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6) code {
+  line-height: 1rem;
+}
+.markdown-section code {
+  padding: 0;
+}
+.markdown-section pre>code {
+  color: rgba(255,255,255,0.8);
+}
+.markdown-section pre {
+  background: rgba(0,0,0,0.2);
+}
+.markdown-section code {
+  background: none;
+}
+.markdown-section h1, .markdown-section h2, .markdown-section h3, .markdown-section h4, .markdown-section strong {
+  color: #91d076; 
+}
+.markdown-section li p {
+  margin: 0;
+}
+.markdown-section ol, .markdown-section p, .markdown-section ul {
+  line-height: 1.5rem;
+}
+.markdown-section a {
+/*
+  color: #91d076;
+  */
+  color: cornflowerblue;
+}
+hr {
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+
+@media screen and (max-width: 600px) {
+  .markdown-section h1 {
+    font-size: 120px;
+    line-height: 100px;
+    letter-spacing: -2px;
+  }
+}
