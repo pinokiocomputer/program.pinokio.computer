@@ -1,5 +1,10 @@
 # Pinokio
 
+###### PINOKIO COMPUTER PROGRAMMING MANUAL
+
+![poster.png](poster.png)
+
+
 ## Introduction
 
 ![animation.gif](animation.gif)
@@ -108,6 +113,20 @@ After downloading the dmg files, **you MUST make a patch**, as shown below:
 For linux, you can download and install directly from the latest release on Github:
 
 <a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/1.3.4'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
+
+---
+
+# Community Help
+
+To stay on top of all the new APIs and app integrations,
+
+## X (Twitter)
+
+> Follow [@cocktailpeanut](https://x.com/cocktailpeanut) on X to stay updated on all the new scripts being released and feature updates.
+
+## Discord
+
+> Join the [Pinokio discord](https://discord.gg/TQdNwadtE4) to ask questions and get help.
 
 ---
 
@@ -435,6 +454,34 @@ It will look something like this:
 
 ---
 
+## Download a file
+
+Pinokio has a cross-platform API for downloading files easily and reliably (including automatic retries, etc.).
+
+Let's try writing a simple script that downloads a PDF.
+
+First create a folder named `download` under the Pinokio `api` folder, and then create a file named `index.json`:
+
+```json
+{
+  "run": [{
+    "method": "fs.download",
+    "params": {
+      "uri": "https://arxiv.org/pdf/1706.03762.pdf",
+      "dir": "pdf"
+    }
+  }]
+}
+```
+
+This will download the file at https://arxiv.org/pdf/1706.03762.pdf to a folder named `pdf` (The `fs.download` API automatically creates a folder at the location if it doesn't already exist). Here's what it looks like:
+
+![fsdownload.gif](fsdownload.gif)
+
+> Learn more about the `fs.download` API [here](#fsdownload)
+
+---
+
 ## Call a script from another script
 
 In many cases you may want to call a script from another script. Some examples:
@@ -691,6 +738,273 @@ If you published to github, you can tag your repository with "pinokio" to make i
 Now it will automatically show up on the "latest" section (at the bottom of the "Discover" page):
 
 ![latest.png](latest.png)
+
+---
+
+# Tutorials
+
+## Install Torch
+
+A lot of AI projects rely on [PyTorch](https://pytorch.org/). However, installing PyTorch is a bit tricky. Let's take a look at an example.
+
+### Problem
+
+Let's imagine a project with the following folder structure (a typical [huggingface gradio space](https://huggingface.co/spaces) is structured this way):
+
+```
+app.py
+requirements.txt
+install.js
+```
+
+- `app.py`: The actual app file
+- `requirements.txt`: A file that includes all the dependency declarations, which can be installed with `pip install -r requirements.txt`
+- `install.js`: a Pinokio script for installing the project
+
+The `requirements.txt` may look something like this:
+
+```
+diffusers
+accelerate
+torch
+transformers
+gradio
+```
+
+A naive way to write an install script `install.js` would be something like this:
+
+```javascript
+module.exports = {
+  "run": [{
+    "method": "shell.run",
+    "params": {
+      "venv": "env",
+      "message": "pip install -r requirements.txt"
+    }
+  }]
+}
+```
+
+However this won't work for many cases, because with PyTorch, **every OS/GPU combination has its own unique install command**, as can be seen on the [Official PyTorch Website](https://pytorch.org/get-started/locally/) (See the bottom line **"Run this Command:"**):
+
+![torch.gif](torch.gif)
+
+
+### Solution
+
+To solve this problem and port AI projects to run locally and cross-platform, we need to:
+
+1. Update ignore the generic `torch`, `torchvision`, and `torchaudio` declarations inside `requirements.txt`.
+2. Update the `install.json` so it installs correct versions of Torch.
+
+#### 1. Update requirements.txt
+
+First, let's comment out any occurrence of `torch`, `torchvision`, and `torchaudio`, since we will write a custom installer for these:
+
+```
+diffusers
+accelerate
+#torch        <= commented out, will be ignored.
+transformers
+gradio
+```
+
+Here's an actual example: https://huggingface.co/spaces/cocktailpeanut/SPRIGHT-T2I/blob/main/requirements.txt
+
+#### 2. Update the install script
+
+Let's update the `install.js` to add all possible combintations of torch install commands:
+
+```javascript
+module.exports = {
+  "run": [
+    // Torch for windows nvidia
+    {
+      "when": "{{platform === 'win32' && gpu === 'nvidia'}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch torchvision torchaudio  --index-url https://download.pytorch.org/whl/cu121"
+      }
+    },
+    // Torch for windows amd
+    {
+      "when": "{{platform === 'win32' && gpu === 'amd'}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch-directml"
+      }
+    },
+    // Torch for windows cpu
+    {
+      "when": "{{platform === 'win32' && (gpu !== 'nvidia' && gpu !== 'amd')}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch torchvision torchaudio"
+      }
+    },
+    // Torch for mac
+    {
+      "when": "{{platform === 'darwin'}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu"
+      }
+    },
+    // Torch for linux nvidia
+    {
+      "when": "{{platform === 'linux' && gpu === 'nvidia'}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch torchvision torchaudio"
+      }
+    },
+    // Torch for linux rocm (amd)
+    {
+      "when": "{{platform === 'linux' && gpu === 'amd'}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.7"
+      }
+    },
+    // Torch for linux cpu
+    {
+      "when": "{{platform === 'linux' && (gpu !== 'amd' && gpu !=='amd')}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu"
+      }
+    },
+    // Install requirements.txt
+    {
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install -r requirements.txt"
+      }
+    }
+  ]
+}
+```
+
+1. This will walk through the `run` array and check the `when` clauses, and only execute the commands when the conditions are met. 
+2. Then in the last step, it will run the original `pip install -r requirements.txt`
+
+
+## Install Torch and Xformers
+
+[Xformers](https://github.com/facebookresearch/xformers) is another library that is frequently used in AI projects, but only for CUDA (NVIDIA GPUs).
+
+Whenever you come across a project that includes `xformers` as a dependency, you will need to do the same thing you did for `torch`:
+
+1. comment out the `xformers` line from the `requirements.txt`
+2. add a custom handling logic for `xformers` into the install script, so it only gets installed when the app is running on `nvidia` GPU.
+
+For example, an udpated `requirements.txt` file may look like this:
+
+```
+diffusers
+accelerate
+#torch        <= commented out, will be ignored.
+#xformers     <= commented out, will be ignored.
+transformers
+gradio
+```
+
+Additionally, we update the install script so it correctly handles `xformers` when the GPU is nvidia:
+
+1. check if the gpu is `nvidia`.
+2. and if so, add the `xformers` to the `pip install` command.
+
+```javascript
+module.exports = {
+  "run": [
+    // Torch for windows nvidia
+    {
+      "when": "{{platform === 'win32' && gpu === 'nvidia'}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch torchvision torchaudio xformers --index-url https://download.pytorch.org/whl/cu121"
+      }
+    },
+    // Torch for windows amd
+    {
+      "when": "{{platform === 'win32' && gpu === 'amd'}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch-directml"
+      }
+    },
+    // Torch for windows cpu
+    {
+      "when": "{{platform === 'win32' && (gpu !== 'nvidia' && gpu !== 'amd')}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch torchvision torchaudio"
+      }
+    },
+    // Torch for mac
+    {
+      "when": "{{platform === 'darwin'}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu"
+      }
+    },
+    // Torch for linux nvidia
+    {
+      "when": "{{platform === 'linux' && gpu === 'nvidia'}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch torchvision torchaudio xformers"
+      }
+    },
+    // Torch for linux rocm (amd)
+    {
+      "when": "{{platform === 'linux' && gpu === 'amd'}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.7"
+      }
+    },
+    // Torch for linux cpu
+    {
+      "when": "{{platform === 'linux' && (gpu !== 'amd' && gpu !=='amd')}}",
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu"
+      }
+    },
+    // Install requirements.txt
+    {
+      "method": "shell.run",
+      "params": {
+        "venv": "env",
+        "message": "pip install -r requirements.txt"
+      }
+    }
+  ]
+}
+```
+
+The only lines that have been changed are:
+
+- **Torch for windows nvidia:**  `"pip install torch torchvision torchaudio xformers --index-url https://download.pytorch.org/whl/cu121"`
+- **Torch for linux nvidia:** `"pip install torch torchvision torchaudio xformers"`
+
 
 ---
 
@@ -4381,7 +4695,7 @@ module.exports = {
 }
 ```
 
-- `<script_schema_version>`: The schema version used (the latest version is `"1.5"`)
+- `<script_schema_version>`: The schema version used (**the latest version is `"1.5"`**)
 - `<title>`: The title of the app
 - `<description>`: the description of the app
 - `<icon>`: the filepath of the icon image (example `icon.png`, `icon.jpeg`, `icon.gif`, `icon.webp`, etc)
