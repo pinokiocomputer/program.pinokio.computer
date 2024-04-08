@@ -1,7 +1,5 @@
 # Pinokio
 
-###### PINOKIO COMPUTER PROGRAMMING MANUAL
-
 ![poster.png](poster.png)
 
 
