@@ -51,9 +51,9 @@ Just like how a computer can do all kinds of things thanks to its comprehensive 
 
 # Install
 
-1. [Windows](#windows)
-2. [Mac](#mac)
-3. [Linux](#linux)
+> 1. [Windows](#windows)
+> 2. [Mac](#mac)
+> 3. [Linux](#linux)
 
 ## Windows
 
@@ -739,7 +739,9 @@ Now it will automatically show up on the "latest" section (at the bottom of the 
 
 ---
 
-# Tutorials
+# Guides
+
+This section will explain some frequently used techniques for writing scripts.
 
 ## Install Torch
 
