@@ -737,6 +737,10 @@ Now it will automatically show up on the "latest" section (at the bottom of the 
 
 ![latest.png](latest.png)
 
+> Pinokio constructs the "Latest" section automatically from GitHub "/repositories" API at https://api.github.com/search/repositories?q=topic:pinokio&sort=updated&direction=desc
+>
+> So if you tagged your repository as "pinokio" but doesn't show up, check in the API result, and try to figure out why it's not included in there.
+
 ---
 
 # Guides
