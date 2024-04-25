@@ -743,6 +743,836 @@ Now it will automatically show up on the "latest" section (at the bottom of the 
 
 ---
 
+## Auto-generate app launchers
+
+While it is important to understand how all this works, in most cases you may want a simple "launcher combo", which includes:
+
+1. **App install script:** Installs the app dependencies
+2. **App Launch script:** Starts the app
+3. **UI:** Displays the launcher UI.
+4. **Reset script:** Resets the app state when something goes wrong.
+5. **Update script:** Updates the app to the latest version with 1 click.
+
+This use case is needed so often, that we've implemented a program that automatically generates these scripts instantly. It's called [Gepeto](#gepeto).
+
+---
+
+# Gepeto
+
+<div class='videoWrapper'>
+  <iframe width="1280" height="720" src="https://www.youtube.com/embed/D8jdowszkMg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+<br>
+
+[Gepeto](https://gepeto.pinokio.computer) is a program that lets you **automatically generate Pinokio scripts, specifically for app launchers.**
+
+Let's start by actually generating an app and its launcher in 1 minute.
+
+## Gepeto Quickstart
+
+
+<div class='videoWrapper'>
+  <iframe width="1280" height="720" src="https://www.youtube.com/embed/I-_W-MkV8tc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+<br>
+
+
+#### 1. Install Gepeto on Pinokio
+
+If you don't have gepeto installed already, find it on Pinokio and install first.
+
+![gepeto_install.gif](gepeto_install.gif)
+
+#### 2. Generate Scripts with Gepeto
+
+You will see a simple web UI that lets you fill out a form. For simplicity, just enter `Helloworld` as the project name, and press **submit**.
+
+![gepeto_generate.gif](gepeto_generate.gif)
+
+This will initialize a project. When you go back to Pinokio home, 
+
+1. You will see a new entry named `Helloworld`. Click into it and you'll see the launcher screen.
+2. Also, check your `/PINOKIO_HOME/api` folder, you will find a new folder named `Helloworld` with some script files.
+
+#### 3. Install and Start the App
+
+Now let's click the **install** button to install the app, and when it's over, click **start** to launch.
+
+![gepeto_launch.gif](gepeto_launch.gif)
+
+You will see a minimal [gradio](https://www.gradio.app/) app, where you can enter a prompt and it will generate an image using [Stable Diffusion XL Turbo](https://stability.ai/news/stability-ai-sdxl-turbo).
+
+So what just happened? We've just **created an empty project**, which comes with a minimal demo app.
+
+Let's take a look at each generated file in the next section.
+
+---
+
+## Creating an empty project
+
+Gepeto automatically generates a minimal set of scripts required for an app launcher. A typical app launcher has the following features:
+
+1. **Install:** Install the dependencies required to run the app. (`install.js`)
+2. **Launch:** Launch the app itself. (`start.js`)
+3. **Reset install:** Reset all the installed dependencies in case you need to reinstall fresh. (`reset.js`)
+4. **Update:** Update to the latest version when the project gets updated. (`update.js`)
+5. **GUI:** The script that describes what the launcher will look like and behave on Pinokio home and as a sidebar menu. (`pinokio.js`)
+
+Here's what it looks like:
+
+![type2.png](type2.png)
+
+Note that in addition to the scripts mentioned above, gepeto has generated some extra files:
+
+- `app.py`: A simple demo app. **Replace this with your own code.**
+- `requirements.txt`: declares all the required PIP dependencies for `app.py`. **Replace with your own.**
+- `icon.png`: A default icon file for the app. **Replace with your own.**
+- `torch.js`: The `torch.js` is a utility script that gets called from `install.js`. Since torch is used in almost all AI projects, and it's quite tricky to install them in a cross-platform manner, this script is included by default. You don't have to worry about this file, just understand that it's used by `install.js`. **Do not touch.**
+
+
+The notable files to look at are `app.py` and `requirements.txt` files:
+
+##### app.py
+
+```python
+import gradio as gr
+import torch
+from diffusers import DiffusionPipeline
+import devicetorch
+# Get the current device ("mps", "cuda", or "cpu")
+device = devicetorch.get(torch)
+# Create a diffusion pipeline
+pipe = DiffusionPipeline.from_pretrained("stabilityai/sdxl-turbo").to(device)
+# Run inference
+def generate_image(prompt):
+    return pipe(
+      prompt,
+      num_inference_steps=2,
+      strength=0.5,
+      guidance_scale=0.0
+    ).images[0]
+# Create a text input + image output UI with Gradio
+app = gr.Interface(fn=generate_image, inputs="text", outputs="image")
+app.launch()
+```
+
+##### requirements.txt
+
+The below are the libraries required to run `app.py`.
+
+```
+transformers
+accelerate
+diffusers
+gradio
+devicetorch
+```
+
+So how are these files actually used?
+
+##### install.js
+
+If you look inside `install.js`, you will see that it's running `pip install -r requirements.txt` to install the dependencies inside the file, like this:
+
+```javascript
+module.exports = {
+  run: [
+    // Delete this step if your project does not use torch
+    {
+      method: "script.start",
+      params: {
+        uri: "torch.js",
+        params: {
+          venv: "env",                // Edit this to customize the venv folder path
+          // xformers: true   // uncomment this line if your project requires xformers
+        }
+      }
+    },
+    // Edit this step with your custom install commands
+    {
+      method: "shell.run",
+      params: {
+        venv: "env",                // Edit this to customize the venv folder path
+        message: [
+          "pip install -r requirements.txt"
+        ],
+      }
+    },
+    //  Uncomment this step to add automatic venv deduplication (Experimental)
+    //  {
+    //    method: "fs.link",
+    //    params: {
+    //      venv: "env"
+    //    }
+    //  },
+    {
+      method: "notify",
+      params: {
+        html: "Click the 'start' tab to get started!"
+      }
+    }
+  ]
+}
+```
+
+1. The first step runs `script.start` to call a script named `torch.js`. This installs torch.
+2. The second step runs `pip install -r requirements.txt` file to install everything in that file.
+
+
+##### start.js
+
+And if you look inside `start.js`, you will see that it's running `python app.py` to start the app:
+
+```javascript
+module.exports = {
+  daemon: true,
+  run: [
+    // Edit this step to customize your app's launch command
+    {
+      method: "shell.run",
+      params: {
+        venv: "env",                // Edit this to customize the venv folder path
+        env: { },                   // Edit this to customize environment variables (see documentation)
+        message: [
+          "python app.py",    // Edit with your custom commands
+        ],
+        on: [{
+          // The regular expression pattern to monitor.
+          // When this pattern occurs in the shell terminal, the shell will return,
+          // and the script will go onto the next step.
+          "event": "/http:\/\/\\S+/",
+
+          // "done": true will move to the next step while keeping the shell alive.
+          // "kill": true will move to the next step after killing the shell.
+          "done": true
+        }]
+      }
+    },
+    // This step sets the local variable 'url'.
+    // This local variable will be used in pinokio.js to display the "Open WebUI" tab when the value is set.
+    {
+      method: "local.set",
+      params: {
+        // the input.event is the regular expression match object from the previous step
+        url: "{{input.event[0]}}"
+      }
+    },
+//    Uncomment this step to enable local wifi sharing (access the app from devices on the same network)
+//    {
+//      method: "proxy.start",
+//      params: {
+//        uri: "{{local.url}}",
+//        name: "Local Sharing"
+//      }
+//    }
+  ]
+}
+```
+
+1. The first step starts a shell (`shell.run`), activates a venv environment at `env` path, and runs the command `python app.py`. It then monitors the shell terminal for any regular expression matching the pattern `/http:\/\/[0-9.:]+/`, and goes to the next step (without terminating the shell).
+2. The next step sets the local variable `url` as using the regular expression match from the previous step.
+
+And that's all there is to it!
+
+---
+
+## Customizing the empty project
+
+Just to make sure we get the point across, let's try modifying the auto-generated code to customize the app:
+
+
+Open the `app.py` and just replace it with something even simpler:
+
+```python
+import gradio as gr
+def square(num):
+    return num * num
+app = gr.Interface(fn=square, inputs="number", outputs="number")
+app.launch()
+```
+
+Also you can get rid of everything but `gradio` in the `requirements.txt` file:
+
+```
+gradio
+```
+
+Now restart the app. It's an app that takes a number and displays its square value:
+
+![gepeto_customize.gif](gepeto_customize.gif)
+
+---
+
+## Creating a launcher for an existing project
+
+So far we've seen "how to start from scratch". But **what if you want to take an EXISTING project and simply write a launcher for it**? For example:
+
+1. Write a local launcher for ComfyUI
+2. Write a local launcher for FaceFusion
+3. Write a local launcher for HuggingFace Spaces
+4. so on.
+
+In this case, you just need to enter the **git repository URL** of the project you're trying to install, when you first run gepeto.
+
+![gepeto_web.png](gepeto_web.png)
+
+As an example, **let's build a launcher for [Devika](https://github.com/stitionai/devika), an AI agent application**.
+
+1. Enter `devika-launcher` in the **Project Name** field.
+2. Enter `https://raw.githubusercontent.com/stitionai/devika/main/.assets/devika-avatar.png` in the **Icon URL** field.
+3. Enter `https://github.com/stitionai/devika` in the **Git URL** field.
+
+and press **Submit**. Gepeto will generate the launcher. Go to Pinokio home, you'll find the generated launcher:
+
+![devika-home.png](devika-home.png)
+
+Click into it and click the **Files** tab to view the generated folder:
+
+![devika-view.gif](devika-view.gif)
+
+The generated folder looks like this:
+
+![devika-launcher.png](devika-launcher.png)
+
+> Note that there are no `app.py` and `requirements.txt` files. Since we entered a git URL, Gepeto assumes that the actual app logic will be in that repository and therefore doesn't generate these two files in this case.
+
+##### install.js
+
+Let's take a look at `install.js`. This is the default script gepeto has generated:
+
+```javascript
+module.exports = {
+  run: [
+    // Edit this step to customize the git repository to use
+    {
+      method: "shell.run",
+      params: {
+        message: [
+          "git clone https://github.com/stitionai/devika app",
+        ]
+      }
+    },
+    // Delete this step if your project does not use torch
+    {
+      method: "script.start",
+      params: {
+        uri: "torch.js",
+        params: {
+          venv: "env",                // Edit this to customize the venv folder path
+          path: "app",                // Edit this to customize the path to start the shell from
+          // xformers: true   // uncomment this line if your project requires xformers
+        }
+      }
+    },
+    // Edit this step with your custom install commands
+    {
+      method: "shell.run",
+      params: {
+        venv: "env",                // Edit this to customize the venv folder path
+        path: "app",                // Edit this to customize the path to start the shell from
+        message: [
+          "pip install gradio devicetorch",
+          "pip install -r requirements.txt"
+        ]
+      }
+    },
+    //  Uncomment this step to add automatic venv deduplication (Experimental)
+    //  {
+    //    method: "fs.link",
+    //    params: {
+    //      venv: "env"
+    //    }
+    //  },
+    {
+      method: "notify",
+      params: {
+        html: "Click the 'start' tab to get started!"
+      }
+    }
+  ]
+}
+```
+
+This is the default install script generated by Gepeto.
+
+1. Run `git clone https://github.com/stitionai/devika app` to download the git repository to `app` folder.
+2. Call `torch.js` script, which automatically installs the correct version of Pytorch for the current system.
+3. Run `pip install gradio devicetorch` and then `pip install -r requirements.txt`, to install dependencies.
+
+This script assumes that the installation for this Devika project is done by running `pip install -r requirements.txt`. Normally this works in many cases, but often you have to do some more. Let's take a look at Devika README.md:
+
+![devika-install.png](devika-install.png)
+
+Looks like we need to do some more:
+
+1. In addition to `pip install -r requirements.txt` we also need to install **Playwright**.
+2. Also we need to install the NPM dependencies with `bun install`.
+
+Let's edit the `install.js` to reflect this:
+
+```js
+module.exports = {
+  run: [
+    // Edit this step to customize the git repository to use
+    {
+      method: "shell.run",
+      params: {
+        message: [
+          "git clone https://github.com/stitionai/devika app",
+        ]
+      }
+    },
+    // Delete this step if your project does not use torch
+    {
+      method: "script.start",
+      params: {
+        uri: "torch.js",
+        params: {
+          venv: "env",                // Edit this to customize the venv folder path
+          path: "app",                // Edit this to customize the path to start the shell from
+          // xformers: true   // uncomment this line if your project requires xformers
+        }
+      }
+    },
+    // Edit this step with your custom install commands
+    {
+      method: "shell.run",
+      params: {
+        venv: "env",                // Edit this to customize the venv folder path
+        path: "app",                // Edit this to customize the path to start the shell from
+        message: [
+          "pip install gradio devicetorch",
+          "pip install -r requirements.txt",
+          "playwright install --with-deps"
+        ]
+      }
+    },
+    {
+      method: "shell.run",
+      params: {
+        path: "app/ui",
+        message: "npm install"
+      }
+    },
+    //  Uncomment this step to add automatic venv deduplication (Experimental)
+    //  {
+    //    method: "fs.link",
+    //    params: {
+    //      venv: "env"
+    //    }
+    //  },
+    {
+      method: "notify",
+      params: {
+        html: "Click the 'start' tab to get started!"
+      }
+    }
+  ]
+}
+``` 
+
+1. Just notice the third step: we've added the additional command `playwright install --with-deps`
+2. Additionally, the fourth step has been added, where we run `npm install` (We use `npm install` instead of the proposed `bun install` since it's effectively the same and NPM is included in Pinokio by default)
+
+##### start.js
+
+Now, what about actually launching the app? The `start.js` script takes care of this. Let's take a look at the generated file:
+
+```js
+module.exports = {
+  daemon: true,
+  run: [
+    {
+      method: "shell.run",
+      params: {
+        venv: "env",                // Edit this to customize the venv folder path
+        env: { },                   // Edit this to customize environment variables (see documentation)
+        path: "app",                // Edit this to customize the path to start the shell from
+        message: [
+          "python app.py",    // Edit with your custom commands
+        ],
+        on: [{
+          // The regular expression pattern to monitor.
+          // When this pattern occurs in the shell terminal, the shell will return,
+          // and the script will go onto the next step.
+          "event": "/http:\/\/\\S+/",
+
+          // "done": true will move to the next step while keeping the shell alive.
+          // "kill": true will move to the next step after killing the shell.
+          "done": true
+        }]
+      }
+    },
+    {
+      // This step sets the local variable 'url'.
+      // This local variable will be used in pinokio.js to display the "Open WebUI" tab when the value is set.
+      method: "local.set",
+      params: {
+        // the input.event is the regular expression match object from the previous step
+        url: "{{input.event[0]}}"
+      }
+    },
+//    Uncomment this step to enable local wifi sharing (access the app from devices on the same network)
+//    {
+//      method: "proxy.start",
+//      params: {
+//        uri: "{{local.url}}",
+//        name: "Local Sharing"
+//      }
+//    }
+  ]
+}
+```
+
+The generated script runs the default command `python app.py`. But again, we need to make some changes to the commands. Let's take a look at the `README.md` file https://github.com/stitionai/devika?tab=readme-ov-file#installation:
+
+![devikia-launch.png](devika-launch.png)
+
+1. We need to run `python devika.py` for the backend
+2. We need to then run `bun run start` for the frontend (or `npm run start`)
+
+Here's what the updated `start.js` script looks like:
+
+```js
+module.exports = {
+  daemon: true,
+  run: [
+    {
+      method: "shell.run",
+      params: {
+        venv: "env",                // Edit this to customize the venv folder path
+        env: { },                   // Edit this to customize environment variables (see documentation)
+        path: "app",                // Edit this to customize the path to start the shell from
+        message: [
+          "python devika.py",
+        ],
+        on: [{
+          "event": "/Devika is up and running/i",   // wait until the terminal prints this message
+          "done": true
+        }]
+      }
+    },
+    {
+      method: "shell.run",
+      params: {
+        path: "app/ui",
+        message: "npm run start",
+        on: [{ "event": "/http:\/\/\\S+/", "done": true }]
+      }
+    },
+    {
+      // This step sets the local variable 'url'.
+      // This local variable will be used in pinokio.js to display the "Open WebUI" tab when the value is set.
+      method: "local.set",
+      params: {
+        // the input.event is the regular expression match object from the previous step
+        url: "{{input.event[0]}}"
+      }
+    },
+//    Uncomment this step to enable local wifi sharing (access the app from devices on the same network)
+//    {
+//      method: "proxy.start",
+//      params: {
+//        uri: "{{local.url}}",
+//        name: "Local Sharing"
+//      }
+//    }
+  ]
+}
+```
+
+Here are the changes:
+
+1. instead of `python app.py`, now we have the `python devika.py` command.
+2. The `python devika.py` command waits until the terminal encounters the regulare expression pattern `/Devika is up and running/i`. This ensures that it doesn't move onto the next step until the server has fully started.
+3. Also, we have a new step that runs `npm run start`
+4. The `npm run start` waits until the terminal encounters the pattern `/http:\/\/\\S+/`. This takes advantage of the fact that the app prints the endpoint URL at the end of the launch.
+
+After we've updated both the `install.js` and `start.js` files, let's go back to Pinokio and try installing and starting:
+
+![devika_launch.gif](devika_launch.gif)
+
+---
+
+## Adding cross platform support
+
+Often we encounter projects that DO NOT support cross platform out of the box. (For example only support CUDA--Nvidia GPUs--and not Macs).
+
+> Normally you can find out very quickly whether an app supports cross platform, simply by searching for **cuda** in the app code.
+>
+> If there's any part of the code that hardcodes **"cuda"** as a device, that means it only works for CUDA.
+>
+> We can fix this by simply finding all these occurrences and replace the hardcoded **"cuda"** with the correct device value for the user's platform.
+
+Let's walk through the process step by step:
+
+1. Create a copy of the original project (so you can edit the code).
+2. Update the app code to support cross platform
+3. Use this copy repository (instead of the original project) when running gepeto.
+
+### 1. Create a copy
+
+Most open source AI projects are hosted on [GitHub](https://github.com) or [HuggingFace](https://huggingface.co).
+
+Before you make changes to the code, you need to create your own copy fork the original project to create your own version.
+
+#### HuggingFace Spaces
+
+On HuggingFace Spaces, you need to **duplicate the space**. Make sure to set it to **public**.
+
+![hf_duplicate.gif](hf_duplicate.gif)
+
+
+#### GitHub
+
+On GitHub, you need to **fork a repository**.
+
+![gh_fork.gif](gh_fork.gif)
+
+### 2. Clone the repository to your machine
+
+Now that you have your own copy, you can clone the git repository to your local machine to start editing the code.
+
+Let's say your repository is https://huggingface.co/spaces/cocktailpeanut/cosxl
+
+You can clone it from terminal using:
+
+```
+git lfs install
+git clone https://huggingface.co/spaces/cocktailpeanut/cosxl
+```
+
+The `git lfs install` is for allowing large files, which happens often when the repository contains large files.
+
+Now you are ready to edit the files to add cross platform support.
+
+### 3. Add device support for Torch
+
+Many projects only support CUDA devices (Nvidia GPU). To make sure apps support non-CUDA devices, we need to:
+
+1. Find all occurrences of `"cuda"` in the app code (for example `app.py`)
+2. Replace all those occurrences with a variable named `device`
+3. Make sure the `device` variable is correctly set
+
+Let's take a look at an example:
+
+```python
+# app.py
+import torch
+...
+pipe_edit = CosStableDiffusionXLInstructPix2PixPipeline.from_single_file(edit_file, num_in_channels=8)
+pipe_edit.scheduler = EDMEulerScheduler(sigma_min=0.002, sigma_max=120.0, sigma_data=1.0, prediction_type="v_prediction")
+pipe_edit.to("cuda")
+
+pipe_normal = StableDiffusionXLPipeline.from_single_file(normal_file, torch_dtype=torch.float16)
+pipe_normal.scheduler = EDMEulerScheduler(sigma_min=0.002, sigma_max=120.0, sigma_data=1.0, prediction_type="v_prediction")
+pipe_normal.to("cuda")
+```
+
+This python code has `"cuda"` hardcoded in two places:
+
+- `pipe_edit.to("cuda")`
+- `pipe_normal.to("cuda")`
+
+In this case we need to replace these `"cuda"` strings with the user's actual device.
+
+We can do this by using a minimal library called `devicetorch`.
+
+First add a line in `requirements.txt` to include `devicetorch`:
+
+```
+# requirements.txt
+devicetorch
+```
+
+Next, import `devicetorch` and call `devicetorch.get(torch)` to get the actual device name:
+
+```python
+# app.py
+import torch
+import devicetorch
+...
+
+# Dynamically get the current device name: will return either "cuda", "mps", or "cpu".
+device = devicetorch.get(torch)
+
+pipe_edit = CosStableDiffusionXLInstructPix2PixPipeline.from_single_file(edit_file, num_in_channels=8)
+pipe_edit.scheduler = EDMEulerScheduler(sigma_min=0.002, sigma_max=120.0, sigma_data=1.0, prediction_type="v_prediction")
+pipe_edit.to(device)
+
+pipe_normal = StableDiffusionXLPipeline.from_single_file(normal_file, torch_dtype=torch.float16)
+pipe_normal.scheduler = EDMEulerScheduler(sigma_min=0.002, sigma_max=120.0, sigma_data=1.0, prediction_type="v_prediction")
+pipe_normal.to(device)
+```
+
+There are some cases where it's much more complicated and this method doesn't work (In these cases I recommend asking the original project author to officially support MPS).
+
+But in most cases, above approach is enough to add cross platform support for any AI app.
+
+### 4. More torch handling
+
+
+Often when you do the `"cuda"` check (as mentioned above), you will ALSO account cuda specific code snippets like this:
+
+```python
+torch.cuda.empty_cache()
+```
+
+Again, this code assumes that it will only run on CUDA devices, and it will FAIL if you run the code on an MPS (Mac) device. 
+
+The `devicetorch` library also has a utility method named `devicetorch.empty_cache(torch)` to take care of this. Just comment out the existing code and replace it with devicetorch.empty_cache(torch)
+
+```python
+#torch.cuda.empty_cache()
+devicetorch.empty_cache(torch)
+```
+
+This will automatically run:
+
+- `torch.cuda.empty_cache()` if the device is CUDA.
+- `torch.mps.empty_cache()` if the device is MPS.
+
+### 4. Run gepeto
+
+Now push the updates back to your copy repository. We will be using THIS repository to install the app (not the original repository).
+
+When you run gepeto, you'll see the **Git URL** field:
+
+![gepeto_web.png](gepeto_web.png)
+
+Enter YOUR repository url, and press "Submit". That's all! Try installing with the generated script!
+
+---
+
+## Downloading files with script
+
+
+Sometimes, the project will tell you you need to download certain files and place them inside certain folder paths.
+
+For example, it may say:
+
+> Download `https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors` to `models/checkpoints`
+> 
+> Download `https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors` to `models/checkpoints`
+
+We can actually use the built-in [fs.download](#fsdownaload) API to download these files:
+
+
+```json
+{
+  "run": [{
+    ...
+  }, {
+    "method": "fs.download",
+    "params": {
+      "url": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors",
+      "dir": "app/models/checkpoints"
+    }
+  }, {
+    "method": "fs.download",
+    "params": {
+      "url": "https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors",
+      "dir": "app/models/checkpoints"
+    }
+  }]
+}
+```
+
+This will download the files into those directories.
+
+If the folder doesn't exist, it will create the folders first automatically.
+
+
+---
+
+## Porting huggingface spaces to local
+
+1. Create a copy
+2. Use the `app.py` and `requirements.txt` files
+3. Remove the spaces
+
+Sometimes an app may have some additional changes.
+
+1. **Huggingface spaces:** When trying to make a localized version of a Huggingface space that utilizes [Zero GPU](https://huggingface.co/zero-gpu-explorers), you will need to comment out the `@spaces.GPU` declarations.
+2. **Environment variables:** When the code makes use of environment variables (Search for `os.environ.get(...)`, this means the app is expecting an environment variable.
+
+### 1. Handling Huggingface Space
+
+Some huggingface spaces make use of a feature called [Zero GPU](https://huggingface.co/zero-gpu-explorers), which dynamically assigns GPU to each app based on demand.
+
+These are Huggingface-specific feature, and is not required when running locally. Here's an example usage:
+
+```python
+import spaces
+from diffusers import DiffusionPipeline
+
+pipe = DiffusionPipeline.from_pretrained(...)
+pipe.to('cuda')
+
+@spaces.GPU
+def generate(prompt):
+    return pipe(prompt).images
+
+gr.Interface(fn=generate, inputs=gr.Text(), outputs=gr.Gallery()).launch()
+```
+
+Because we don't use the `spaces` feature, we can **comment out these spaces related lines**:
+
+- `import spaces`
+- `@spaces.GPU`
+
+The result:
+
+```python
+#import spaces
+from diffusers import DiffusionPipeline
+
+pipe = DiffusionPipeline.from_pretrained(...)
+pipe.to('cuda')
+
+#@spaces.GPU
+def generate(prompt):
+    return pipe(prompt).images
+
+gr.Interface(fn=generate, inputs=gr.Text(), outputs=gr.Gallery()).launch()
+```
+
+
+### 2. Environment Variables
+
+Sometimes the code may be looking for system environment variables. To find out if this is the case, search for: `os.environment.get`.
+
+For example, let's say the code has:
+
+```python
+# app.py
+mps_fallback = os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK")
+```
+
+You can pass in the `PYTORCH_ENABLE_MPS_FALLBACK` environment variable by setting the `env` object when launching `app.py`, like this:
+
+```json
+{
+  "run": [{
+    "method": "shell.run",
+    "params": {
+      "message": "python app.py",
+      "env": {
+        "PYTORCH_ENABLE_MPS_FALLBACK": "1"
+      }
+    }
+  }]
+}
+```
+
+
+
+
+
+---
+
 # Guides
 
 This section will explain some frequently used techniques for writing scripts.
@@ -1009,6 +1839,13 @@ The only lines that have been changed are:
 - **Torch for windows nvidia:**  `"pip install torch torchvision torchaudio xformers --index-url https://download.pytorch.org/whl/cu121"`
 - **Torch for linux nvidia:** `"pip install torch torchvision torchaudio xformers"`
 
+## Build an App Launcher Instantly
+
+Pinokio script can be used to do all kinds of things (run shell commands, make network requests, write to files, etc.), but sometimes we want a dead simple way to auto-generate some scripts to install and run some apps.
+
+For this specific--but very frequent--use case, we have a program called [gepeto](https://gepeto.pinokio.computer), which automatically generates a set of scripts commonly used for installing, running, and managing apps.
+
+If building an app launcher is your goal, we recommend you start from using Gepeto.
 
 ---
 

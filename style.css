@@ -2,6 +2,20 @@ body {
   background: rgb(27, 28, 29);
   color: white;
 }
+.videoWrapper {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 */
+  height: 0;
+  margin-top: 10px;
+}
+.videoWrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
 a.btn {
   display: inline-block;
   padding: 10px 20px;

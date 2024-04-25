@@ -24,6 +24,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Micro+5&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 </head>
 <body>
   <div id="app"></div>
@@ -32,7 +33,18 @@
       name: 'Pinokio',
       repo: 'https://github.com/pinokiocomputer/program.pinokio.computer',
       themeColor: "#111111",
-      maxLevel: 2
+      maxLevel: 2,
+      plugins: [
+        (hook, vm) => {
+          hook.ready(() => {
+            //let ff = new Freezeframe(".markdown-section img[src$=gif]", {
+            let ff = new Freezeframe("img[src$=gif]", {
+            //  trigger: "click",
+              overlay: true
+            });
+          })
+        }
+      ]
     }
     document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
@@ -45,6 +57,10 @@
     })
   </script>
   <!-- Docsify v4 -->
+  <!--
+  <script src="https://unpkg.com/freezeframe/dist/freezeframe.min.js"></script>
+  -->
+  <script src="https://ctrl-freaks.github.io/freezeframe.js/freezeframe.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-javascript.min.js"></script>
