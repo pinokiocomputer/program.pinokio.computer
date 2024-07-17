@@ -61,7 +61,7 @@ Make sure to follow **ALL steps below!**
 
 #### Step 1. Download
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/1.3.4/Pinokio-1.3.4-win32.zip'><i class="fa-brands fa-windows"></i> Download for Windows</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.0.2/Pinokio-2.0.2-win32.zip'><i class="fa-brands fa-windows"></i> Download for Windows</a>
 
 #### Step 2. Unzip
 
@@ -89,7 +89,7 @@ Make sure to follow **BOTH step 1 AND step 2.**
 
 #### Step 1. Download
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/1.3.4/Pinokio-1.3.4-arm64.dmg'><i class="fa-brands fa-apple"></i> Download for M1/M2/M3 Mac</a>&nbsp;&nbsp;<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/1.3.4/Pinokio-1.3.4.dmg'><i class="fa-brands fa-apple"></i> Download for Intel Mac</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.0.2/Pinokio-2.0.2-arm64.dmg'><i class="fa-brands fa-apple"></i> Download for M1/M2/M3 Mac</a>&nbsp;&nbsp;<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.0.2/Pinokio-2.0.2.dmg'><i class="fa-brands fa-apple"></i> Download for Intel Mac</a>
 
 
 #### Step 2. Install (IMPORTANT!!)
@@ -108,9 +108,9 @@ After downloading the dmg files, **you MUST make a patch**, as shown below:
 
 ## Linux
 
-For linux, you can download and install directly from the latest release on Github:
+For linux, you can download and install directly from the latest release on Github (Scroll down to the bottom of the page for all the binaries):
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/1.3.4'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/2.0.2'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
 
 ---
 
@@ -1214,14 +1214,6 @@ module.exports = {
         url: "{{input.event[0]}}"
       }
     },
-//    Uncomment this step to enable local wifi sharing (access the app from devices on the same network)
-//    {
-//      method: "proxy.start",
-//      params: {
-//        uri: "{{local.url}}",
-//        name: "Local Sharing"
-//      }
-//    }
   ]
 }
 ```
@@ -1271,14 +1263,6 @@ module.exports = {
         url: "{{input.event[0]}}"
       }
     },
-//    Uncomment this step to enable local wifi sharing (access the app from devices on the same network)
-//    {
-//      method: "proxy.start",
-//      params: {
-//        uri: "{{local.url}}",
-//        name: "Local Sharing"
-//      }
-//    }
   ]
 }
 ```
@@ -2828,6 +2812,54 @@ running instruction 1. next instruction is 2
 running instruction 2. next instruction is null
 ```
 
+---
+
+## env
+
+You can access the environment variables of the currently running process with `env`.
+
+For example, let's say we have set the `SD_INSTALL_CHECKPOINT` and `MODEL_PATH` environment variables for the app. We may retrieve them while executing a script, like this:
+
+```json
+{
+  "run": [{
+    "method": "fs.download",
+    "params": {
+      "uri": "{{env.SD_INSTALL_CHECKPOINT}}",
+      "dir": "{{env.MODEL_PATH}}"
+    }
+  }]
+}
+```
+
+Additionally, we may even use the environment variables inside `when`, effectively determining whether to run an action or not based on environment variables.
+
+
+For example we may ONLY want to download a file if the environment variable is set:
+
+
+```json
+{
+  "run": [{
+    "method": "shell.run",
+    "params": {
+      "message": "git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui app",
+    }
+  }, {
+    "when": "{{env.SD_INSTALL_CHECKPOINT}}",
+    "method": "fs.download",
+    "params": {
+      "uri": "{{env.SD_INSTALL_CHECKPOINT}}",
+      "dir": "{{env.MODEL_PATH}}"
+    }
+  }]
+}
+```
+
+In the above script,
+
+1. If the `SD_INSTALL_CHECKPOINT` environment variable is set (through [ENVIRONMENT](#ENVIRONMENT), or through other means), the `fs.download` action will execute properly.
+2. If the `SD_INSTALL_CHECKPOINT` is NOT set, then the second step will be skipped and the script will complete immediately after the first step.
 
 ---
 
@@ -4624,91 +4656,6 @@ You can display a notification, and launch an external browser when clicked. Jus
 
 ---
 
-## proxy
-
-- [proxy.start](#proxystart)
-
-### proxy.start
-
-Creates a wifi sharing proxy, so you can access the pinokio server from any other device on the same wifi network.
-
-The system automatically searches for available ports starting from 42421 (port 42420 is reserved for the proxy for Pinokio itself) and automatically creates proxies with the next available port whenever you call `proxy.start`.
-
-#### syntax
-
-
-```json
-{
-  "run": [{
-    "method": "proxy.start",
-    "params": {
-      "name": <name>,
-      "uri": <uri>
-    }
-  }]
-}
-```
-
-- `<name>`: the name of the proxy to display
-- `<uri>`: the uri to proxy
-
-When you call the above method, it will create a proxy using an available port, which points to the `<uri>`.
-
-1. This new proxy URL can be accessed from any device on the same wifi network
-2. When a request is made to the proxy URL, it will automatically load the contents of the `<uri>`
-
-#### return value
-
-- `input`: the created proxy information. includes the following attributes:
-  - `target`: the target uri (same as `params.uri`)
-  - `proxy`: the newly created proxy uri
-
-For example:
-
-```json
-{
-  "target":"http://127.0.0.1:8188",
-  "proxy":"http://192.168.1.103:42421"
-}
-```
-
-#### examples
-
-```json
-{
-  "run": [{
-    "method": "shell.run",
-    "params": {
-      "venv": "env",
-      "path": "app",
-      "message": "python app.py",
-      "on": [{ "event": "/http:\/\/[0-9.:]+/", "done": true }]
-    }
-  }, {
-    "method": "local.set",
-    "params": {
-      "url": "{{input.event[0]}}"
-    }
-  }, {
-    "method": "proxy.start",
-    "params": {
-      "uri": "{{local.url}}",
-      "name": "Local Sharing"
-    }
-  }]
-}
-```
-
-In this example:
-
-1. The `shell.run` command runs `python app.py` which launches a server
-2. The `"on"` attribute monitors the terminal to wait for the matching regular expression
-3. When there's a string in the terminal that matches the pattern, the `shell.run` method will stop and go to the next step, passing the matched regular expression object as `input`.
-4. In the second step, a local variable named `url` is set using the `local.set` method. It sets the url as the first item in the regular expression match object from the first step.
-5. In the last step, it starts a proxy for the `local.url`
-
----
-
 ## script
 
 - [script.download](#scriptdownload)
@@ -5035,6 +4982,7 @@ The `shell.run` command starts an instant shell, runs the specified commands, an
     "conda": <conda_config>,
     "on": <shell_event_handler>,
     "sudo": <sudo>,
+    "cache": <cache>
   }
 }
 ```
@@ -5075,6 +5023,11 @@ The `shell.run` command starts an instant shell, runs the specified commands, an
 - `<sudo>`: **(optional)** run in admin mode when set to `true`.
   - on mac and linux, it runs the command with `sudo <message>`
   - on windows, it runs the command in administrator mode
+- `<cache>`: **(optional)** cache path
+  - the following subfolders will be generated under the cache folder, which will be programmatically populated when the apps run:
+    - `HF_HOME`: huggingface cache. used to store model files downloaded from huggingface.
+    - `TORCH_HOME`: pytorch hub cache. used to store model files downloaded from torch hub
+    - `GRADIO_TEMP_DIR`: gradio cache. used to store files processed by gradio
 
 #### return value
 
@@ -5532,26 +5485,65 @@ module.exports = {
   "title": <title>,
   "icon": <icon>,
   "description": <description>,
-  "menu": <menu>
+  "menu": <menu>,
+  "pre": <pre>,
+  "start": <start>
 }
 ```
 
-- `<script_schema_version>`: The schema version used (**the latest version is `"1.5"`**)
+- `<script_schema_version>`: The schema version used (**the latest version is `"2.0"`**)
 - `<title>`: The title of the app
 - `<description>`: the description of the app
 - `<icon>`: the filepath of the icon image (example `icon.png`, `icon.jpeg`, `icon.gif`, `icon.webp`, etc)
-- `<menu>`: An **array** of tab items, or an **async function** that takes `kernel` as argument and returns the same tab items array. Each item in the array may have the following attributes:
+- `<menu>`: An **array** of tab items, or an **async function** that takes `kernel` and `info` as arguments and returns the same tab items array. Each item in the array may have the following attributes:
     - `text`: The text to display on the tab.
-    - `icon`: The icon to display on the tab. Uses [Fontawesome](https://fontawesome.com/search?o=r&m=free) class names (example: `fa-solid fa-check`, `fa-regular fa-star`, etc.)
+    - `icon`: The icon file path to display on the tab.
     - `href`: The URL to open in the tab.
     - `params` (optional): The query parameters to pass to the tab.
       - If passed to a script, the `params` will be made available as the `input` variable inside the first step of the `run` script.
     - `popout` (optional): Opens the `href` link in an external browser instead of Pinokio if set to `true`
     - `menu` (optional): If specified, creates a nested menu. The nested menu follows the same specification as the top level menu (with `text`, `icon`, `href`, `params`, and `popout` attributes)
+    - `default` (optional): If specified, this tab item is automatically selected by default. When the `href` attribute is a script URL, the selection also means the script will be automatically started. This can be used to implement automatically executing scripts.
+- `<pre>`: (optional) Prerequisites. In case the script requires installation of 3rd party programs that cannot be easily installed through the script, you may specify a `pre` array to provide download links to the user before the installation starts. Each item in the `pre` array may have the following attributes:
+    - `text`: The text to display for the item.
+    - `icon`: The icon file path to display for the item.
+    - `description`: The description.
+    - `href`: The URL to open.
+- `<start>`: start script declaration. 
+    - Types: can be a `string` or an `object`.
+      - string: `url`
+      - object: can have the following attributes:
+        - `url`: the url
+        - `params`: the params to pass to the url
+  
 
 ---
 
 ### examples
+
+#### Prerequisite apps
+
+Let's say an app needs [Ollama](https://ollama.com) to run.
+
+We can direct the user to install Ollama before installing the app, using the `<pre>` syntax in `pinokio.js`:
+
+```javascript
+module.exports = {
+  version: "2.0",
+  title: "LLM App",
+  pre: [{
+    icon: "ollama.png",
+    title: "Ollama",
+    description: "Get up and running with large language models.",
+    href: "https://ollama.com/"
+  }],
+  ...
+}
+```
+
+When this is downloaded, the user will be shown the following Prerequisites screen BEFORE the install screen:
+
+![prerequisites.png](prerequisites.png)
 
 #### Static menu
 
@@ -5559,7 +5551,7 @@ Here's a UI script for generating a minimal launcher UI:
 
 ```javascript
 module.exports = {
-  version: "1.5",
+  version: "2.0",
   title: "Test Launcher",
   description: "This is for testing a test launcher",
   icon: "icon.png",
@@ -5586,24 +5578,42 @@ This means you can write the `pinokio.js` file so it automatically displays rele
 
 For example, when the app is running, you may want to display a link to open the actual web UI. Or when the app is not running, you may want to display a "Start" button instead.
 
-We can achieve this type of dynamic menu rendering by using a function instead of array. Instead of setting a static `menu` array, set the `menu` as an `async` function that takes `kernel` as an argument:
+We can achieve this type of dynamic menu rendering by using a function instead of array. Instead of setting a static `menu` array, set the `menu` as an `async` function that takes `kernel` and `info` as an arguments.
+
+You can use the `info` variable to get various types of status information about the files and scripts:
+
+- `info.local(filepath)`: get the local variable object of a script running at `filepath`.
+- `info.running(filepath)`: get the running status of a script at `filepath`.
+- `info.exists(filepath)`: check if a file exists at `filepath`.
+- `info.path(filepath)`: get the absolute path of a `fileapth`.
+
+Check out an example below, where it makes use of the `info` API to determine whether `install.json` or `start.json` scripts are running, and if they are, get the local variable in memory, etc.
+
 
 ```javascript
 const path = require("path")
 module.exports = {
-  version: "1.5",
+  version: "2.0",
   title: "InvokeAI",
   description: "Generative AI for Professional Creatives",
   icon: "icon.jpeg",
-  menu: async (kernel) => {
-    let installing = kernel.script.running(__dirname, "install.json")
-    let installed = await kernel.exists(__dirname, "app", "env")
+  menu: async (kernel, info) => {
+    /**********************************************************************************************
+      info has 4 methods (where `filepath` may be a relative path or an absolute path.):
+        - info.local(filepath): get the local variable object of a script running at `filepath`.
+        - info.running(filepath): get the running status of a script at `filepath`.
+        - info.exists(filepath): check if a file exists at `filepath`.
+        - info.path(filepath): get the absolute path of a `fileapth`.
+    **********************************************************************************************/
+    let installing = info.running("install.json")
+    let installing = info.running("install.json")
+    let installed = info.exists("app/env")
     if (installing) {
       return [{ icon: "fa-solid fa-plug", text: "Installing...", href: "install.json" }]
     } else if (installed) {
-      let running = kernel.running(__dirname, "start.json")
+      let running = info.running("start.json")
       if (running) {
-        let memory = kernel.script.local(__dirname, "start.json")
+        let memory = info.local("start.json")
         if (memory && memory.url) {
           return [
             { icon: "fa-solid fa-rocket", text: "Web UI", href: memory.url },
@@ -5639,11 +5649,11 @@ module.exports = {
 }
 ```
 
-Note that you can use the [kernel](#kernel) API to:
+Based on the determined app status, the dynamic `menu` function can generate menu items.
 
-1. check whether a file/folder exists at a path: `kernel.exists()`
-2. check if a script at a specified path is running: `kernel.script.running()`
-3. get the local variables object for a script at specified path: `kernel.script.local()`
+1. check whether a file/folder exists at a path: `info.exists()`
+2. check if a script at a specified path is running: `info.running()`
+3. get the local variables object for a script at specified path: `info.local()`
 
 ---
 
@@ -5681,3 +5691,169 @@ module.exports = {
 
 ---
 
+#### Auto-execution
+
+Using the `default` attribute, it is possible to implement auto-executing scripts.
+
+For example, let's say we want the following behavior:
+
+- run `install.js` if `app/env` does not exist.
+- run `start.js` if `app/env` exists, and `start.js` is not already running.
+
+```javascript
+module.exports = {
+  title: "Auto Launcher",
+  icon: "icon.png",
+  menu: async (kernel, info) => {
+    if (info.exists("app/env")) {
+      // already installed. select the "start.js", automatically running `start.js`
+      return [{
+        text: "Install",
+        href: "install.js"
+      }, {
+        default: true,
+        text: "Start",
+        href: "start.js"
+      }]
+    } else {
+      // not installed yet. select the install.js tab.
+      return [{
+        default: true,
+        text: "Install",
+        href: "install.js"
+      }, {
+        text: "Start",
+        href: "start.js"
+      }]
+    }
+  }
+}
+```
+
+---
+
+# ENVIRONMENT
+
+While it's possible to customize script behaviors by directly modifying the script files, this is not desirable.
+
+We want a way to customize an app's behavior WITHOUT touching the code. We can achieve this through `ENVIRONMENT`.
+
+## Before
+
+Let's say you want to write a script that automatically downloads an AI model to a specified directory (for example `models`). The script may look like this:
+
+```json
+{
+  "run": [{
+    "method": "fs.download",
+    "params": {
+      "uri": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors",
+      "dir": "app/models/Stable-diffusion"
+    }
+  }]
+}
+```
+
+The problem is, to change the behavior of this script, the end user will need to edit the URI using a file editor.
+
+What if you wanted to let the end user modify the `uri`?
+
+---
+
+## After
+
+If you want to write a script that can be easily customized by users, you may want to create a file named `_Environment` (Must be prefixed with `_`).
+
+Here's an example `_ENVIRONMENT` file:
+
+```
+#####################################################################################################################
+#
+# SD_INSTALL_CHECKPOINT
+# - Delete this field if you don't want to auto-download a checkpoint when installing
+# - Replace the URL with another checkpoint link if you want a different checkpoint
+#
+#####################################################################################################################
+SD_INSTALL_CHECKPOINT=https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors
+```
+
+Put this file inside the root of the script, along with `pinokio.js` and `download.json`, like this:
+
+```
+pinokio.js
+download.json
+_ENVIRONMENT
+```
+
+Then we can modify the `download.json` file like this:
+
+```json
+{
+  "run": [{
+    "method": "fs.download",
+    "params": {
+      "uri": "{{env.SD_INSTALL_CHECKPOINT}}",
+      "dir": "app/models/Stable-diffusion"
+    }
+  }]
+}
+```
+
+---
+
+## Custom Install Screen
+
+When you publish this repository, when the user installs the script, they will be shown the following custom install screen:
+
+![custom_install.png](custom_install.png)
+
+With a user-friendly interface, the user can customize which URL to use when first installing the app.
+
+---
+
+## Configure Menu
+
+Also, after the install is complete, they will be able to access the same ENVIRONMENT editor under the **Configure** menu:
+
+![configure.png](configure.png)
+
+---
+
+## How it works
+
+The `_ENVIRONMENT` file you included is a **template file**. When a user downloads this script repository, here's what happens:
+
+1. A new `ENVIRONMENT` file (note that there is no `_` prefix) is created by inheriting from the `_ENVIRONMENT` template file.
+2. From this point on, `_ENVIRONMENT` is NOT used.
+3. The `ENVIRONMENT` file is used to store the app's configuration going forward.
+4. The user can edit the configuration by either DIRECTLY editing the `ENVIRONMENT` file, or by editing through the built-in `Configure` menu.
+
+___
+
+## Isolated Environment for Each App
+
+These environment variables are not some special purpose things JUST for Pinokio. They are internally powered by the widely adopted [Environment variable system](https://en.wikipedia.org/wiki/Environment_variable).
+
+
+This means we can use the `ENVIRONMENT` file to not only customize the script behavior but also ANYTHING that happens inside the app. When would this be useful?
+
+Often, apps have their own ways of configuring. For example, all [Gradio](https://www.gradio.app/) based apps let you [customize the app's behavior through environment variables](https://www.gradio.app/main/guides/environment-variables). Traditionally, running these apps in a customized manner involved either:
+
+1. Changing the environment variables GLOBALLY.
+2. or running environment shell commands like `export GRADIO_SERVER_PORT=8080`
+
+Neither are ideal.
+
+- Global environment variable update is bad because you may want to maintain different custom environment for each individual app.
+- Having to run `export` commands is cumbersome and is NOT user friendly. You shouldn't have to touch the terminal.
+
+Fortunately, Pinokio's `ENVIRONMENT` file takes care of this automatically.
+
+Let's say we want to let users customize `GRADIO_SERVER_PORT` and `GRADIO_TEMP_DIR`. All you need to do to enable this is set those values in the `_ENVIRONMENT` file (or `ENVIRONMENT` file if the user is trying to customize this on their end):
+
+```
+GRADIO_SERVER_PORT=8080
+GRADIO_TEMP_DIR=./cache/GRADIO
+```
+
+These variables will be immediately available for editing in the `Configure` menu, and whenever run any script from the repository, these custom environment variables will be automatically applied.
