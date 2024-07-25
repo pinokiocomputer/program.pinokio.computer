@@ -61,7 +61,7 @@ Make sure to follow **ALL steps below!**
 
 #### Step 1. Download
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.0.4/Pinokio-2.0.4-win32.zip'><i class="fa-brands fa-windows"></i> Download for Windows</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.1.14/Pinokio-2.1.14-win32.zip'><i class="fa-brands fa-windows"></i> Download for Windows</a>
 
 #### Step 2. Unzip
 
@@ -89,7 +89,7 @@ Make sure to follow **BOTH step 1 AND step 2.**
 
 #### Step 1. Download
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.0.4/Pinokio-2.0.4-arm64.dmg'><i class="fa-brands fa-apple"></i> Download for M1/M2/M3 Mac</a>&nbsp;&nbsp;<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.0.4/Pinokio-2.0.4.dmg'><i class="fa-brands fa-apple"></i> Download for Intel Mac</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.1.14/Pinokio-2.1.14-arm64.dmg'><i class="fa-brands fa-apple"></i> Download for M1/M2/M3 Mac</a>&nbsp;&nbsp;<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.1.14/Pinokio-2.1.14.dmg'><i class="fa-brands fa-apple"></i> Download for Intel Mac</a>
 
 
 #### Step 2. Install (IMPORTANT!!)
@@ -110,7 +110,7 @@ After downloading the dmg files, **you MUST make a patch**, as shown below:
 
 For linux, you can download and install directly from the latest release on Github (Scroll down to the bottom of the page for all the binaries):
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/2.0.4'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/2.1.14'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
 
 ---
 
