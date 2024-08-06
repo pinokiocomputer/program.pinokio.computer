@@ -755,6 +755,33 @@ While it is important to understand how all this works, in most cases you may wa
 
 This use case is needed so often, that we've implemented a program that automatically generates these scripts instantly. It's called [Gepeto](#gepeto).
 
+
+---
+
+## Post x.com updates
+
+Often you may want to link to multiple social media posts on the script landing page, so people can learn how it works, how to use it, or any other useful information.
+
+![pinokio_meta.gif](pinokio_meta.gif)
+
+To do this, simply create a `pinokio_meta.json` file, with a `posts` array attribute, where each item is an x.com URL. Here's an example:
+
+
+```json
+{
+  "posts": [
+    "https://x.com/cocktailpeanut/status/1819482952071323788",
+    "https://x.com/cocktailpeanut/status/1819439443394109837",
+    "https://x.com/cocktailpeanut/status/1800944955738685648",
+    "https://x.com/cocktailpeanut/status/1754244867159413001",
+    "https://x.com/cocktailpeanut/status/1729884460114727197",
+    "https://x.com/cocktailpeanut/status/1728075614807048208"
+  ]
+}
+```
+
+You can see it in action: https://github.com/cocktailpeanutlabs/comfyui/blob/main/pinokio_meta.json
+
 ---
 
 # Gepeto
