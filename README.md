@@ -758,9 +758,9 @@ This use case is needed so often, that we've implemented a program that automati
 
 ---
 
-## Adding posts to the app page
+## Adding posts to the Newsfeed
 
-Often you may want to link to multiple social media posts on the script landing page, so people can learn how it works, how to use it, or any other useful information.
+Often you may want to share more info about each script. You can use the newsfeed for that.
 
 ![pinokio_meta.gif](pinokio_meta.gif)
 
@@ -781,6 +781,8 @@ To do this, simply create a `pinokio_meta.json` file, with a `posts` array attri
 ```
 
 You can see it in action: https://github.com/cocktailpeanutlabs/comfyui/blob/main/pinokio_meta.json
+
+Once you publish, this will be immediately reflected on the script landing page.
 
 ---
 
