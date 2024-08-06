@@ -758,7 +758,7 @@ This use case is needed so often, that we've implemented a program that automati
 
 ---
 
-## Post x.com updates
+## Adding posts to the app page
 
 Often you may want to link to multiple social media posts on the script landing page, so people can learn how it works, how to use it, or any other useful information.
 
