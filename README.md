@@ -6653,6 +6653,8 @@ Place custom files under your `PINOKIO_HOME/web` folder as follows:
 
 ## Home Page
 
+![customize_home.png](customize_home.png)
+
 To customize the home page, you can write your own custom `index.ejs`. The template file can display the installed apps using the following attributes:
 
 - `kernel`: kernel API
