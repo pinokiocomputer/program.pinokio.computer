@@ -61,7 +61,7 @@ Make sure to follow **ALL steps below!**
 
 #### Step 1. Download
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.15.1/Pinokio-2.15.1-win32.zip'><i class="fa-brands fa-windows"></i> Download for Windows</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.0.26/Pinokio-3.0.26-win32.zip'><i class="fa-brands fa-windows"></i> Download for Windows</a>
 
 #### Step 2. Unzip
 
@@ -89,7 +89,7 @@ Make sure to follow **BOTH step 1 AND step 2.**
 
 #### Step 1. Download
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.15.1/Pinokio-2.15.1-arm64.dmg'><i class="fa-brands fa-apple"></i> Download for Apple Silicon Mac (M1/M2/M3/M4)</a>&nbsp;&nbsp;<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/2.15.1/Pinokio-2.15.1.dmg'><i class="fa-brands fa-apple"></i> Download for Intel Mac</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.0.26/Pinokio-3.0.26-arm64.dmg'><i class="fa-brands fa-apple"></i> Download for Apple Silicon Mac (M1/M2/M3/M4)</a>&nbsp;&nbsp;<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.0.26/Pinokio-3.0.26.dmg'><i class="fa-brands fa-apple"></i> Download for Intel Mac</a>
 
 
 #### Step 2. Install (IMPORTANT!!)
@@ -110,7 +110,7 @@ After downloading the dmg files, **you MUST make a patch**, as shown below:
 
 For linux, you can download and install directly from the latest release on Github (Scroll down to the bottom of the page for all the binaries):
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/2.15.1'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/3.0.26'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
 
 ---
 
@@ -247,6 +247,71 @@ Or if it's not windows (mac or linux), it's equivalent to:
 ```
 
 > You can learn more about templates [here](#template-interpreter)
+
+
+---
+
+## Environment Variable Setup
+
+Often, scripts may require certain environment variables to be set in order to run properly.
+
+While the environment variables can be set inside the "Configure" tab, this is still tedious and most users won't know which environment variables need to be filled out.
+
+To solve this problem, a script can EXPLICITLY require the environment variables required to run.
+
+1. If the environment variables are set, it will just use those variables to start automatically without pausing.
+2. If the environment variables are NOT yet set, it will NOT start the script, but display a form that needs to be filled out.
+
+To achieve this, you can attach a `pre` array in a script.
+
+```
+{
+  "pre": [<requirement>, <requirement>, ...]
+}
+```
+
+Where `<requirement>` is an object that describes the required environment variables:
+
+```
+<requirement> := {
+  env: <environment_variable_name>,
+  title: <title>,
+  description: <description>,
+  default: <default_value>
+}
+```
+
+- `<environment_variable_name>`: The name of the environment variable needed to start the script.
+- `<title>`: (optional) A simple title for the field
+- `<description>`: (optional) description for the field
+- `<default>`: (optional) a default value that will be pre-filled when the form is rendered.
+
+For example, let's say our script looks like the following:
+
+
+```json
+{
+  "pre": [{
+    "title": "custom env",
+    "description": "set custom env 1",
+    "env": "CUSTOM_ENV"
+  }, {
+    "title": "custom env 2",
+    "description": "set custom env 2",
+    "env": "CUSTOM_ENV2"
+  }],
+  "run": [
+    ...
+  ]
+}
+```
+
+There can be 2 scenarios:
+
+1. The environment variables have been previously filled out by the user: The script just starts automatically as usual.
+2. The environment variables are NOT yet set: In this case the following form screen will be displayed:
+
+![pre_env.png](pre_env.png)
 
 
 ---
@@ -2843,9 +2908,9 @@ running instruction 2. next instruction is null
 
 ---
 
-## env
+## envs
 
-You can access the environment variables of the currently running process with `env`.
+You can access the environment variables of the currently running process with `envs`.
 
 For example, let's say we have set the `SD_INSTALL_CHECKPOINT` and `MODEL_PATH` environment variables for the app. We may retrieve them while executing a script, like this:
 
@@ -2854,8 +2919,8 @@ For example, let's say we have set the `SD_INSTALL_CHECKPOINT` and `MODEL_PATH` 
   "run": [{
     "method": "fs.download",
     "params": {
-      "uri": "{{env.SD_INSTALL_CHECKPOINT}}",
-      "dir": "{{env.MODEL_PATH}}"
+      "uri": "{{envs.SD_INSTALL_CHECKPOINT}}",
+      "dir": "{{envs.MODEL_PATH}}"
     }
   }]
 }
@@ -2875,11 +2940,11 @@ For example we may ONLY want to download a file if the environment variable is s
       "message": "git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui app",
     }
   }, {
-    "when": "{{env.SD_INSTALL_CHECKPOINT}}",
+    "when": "{{envs.SD_INSTALL_CHECKPOINT}}",
     "method": "fs.download",
     "params": {
-      "uri": "{{env.SD_INSTALL_CHECKPOINT}}",
-      "dir": "{{env.MODEL_PATH}}"
+      "uri": "{{envs.SD_INSTALL_CHECKPOINT}}",
+      "dir": "{{envs.MODEL_PATH}}"
     }
   }]
 }
@@ -3271,6 +3336,7 @@ Pinokio script is a declarative markup that can shell commands, work with files,
 
 It is written in JSON, and can also be written in JavaScript (which returns the resulting JSON) in case you need to make them dynamically change.
 
+
 ---
 
 ## fs
@@ -3281,6 +3347,8 @@ It is written in JSON, and can also be written in JavaScript (which returns the 
 - [fs.copy](#fscopy)
 - [fs.download](#fsdownload)
 - [fs.link](#fslink)
+- [fs.open](#fsopen)
+- [fs.cat](#fscat)
 
 ### fs.write
 
@@ -4124,6 +4192,85 @@ Here's what the end result may look like for the original 3 apps example from ab
 1. Note that the `/torch`, `/accelerate`, and `xformers` folders are all pointing to the shared virtual drive folders. This is already saving tons of disk space by removing the redundancy.
 2. At the same time, each app works EXACTLY the same as before because these are symbolic links, and they all behave as if these pip packages are actually stored in each app's venv site-packages folders (but in reality they are just symbolic links pointing to the shared pip virtual drive)
 
+---
+
+### fs.open
+
+#### syntax
+
+The `fs.open` api opens a file explorer for a given path
+
+```json
+{
+  "method": "fs.open",
+	"params": {
+		"path": "<path>",
+    "mode": <mode>
+	}
+}
+```
+
+- `<path>`: the file path to open in a file explorer
+- `<mode>`: (optional) may be either `view` or `open`. If not specified, it opens in the `view` mode.
+  - `view`: open the file path in file explorer
+  - `open`: open the file at the file path
+
+#### return value
+
+none
+
+
+#### example
+
+Open a folder in file explorer
+
+```json
+{
+  "method": "fs.open",
+	"params": {
+		"path": "outputs"
+	}
+}
+```
+
+Open a file (with whichever app is the default handler)
+
+```json
+{
+  "method": "fs.open",
+	"params": {
+		"path": "outputs",
+    "mode": "open"
+	}
+}
+```
+
+
+---
+
+### fs.cat
+
+#### syntax
+
+The `fs.cat` api prints the contents of a file
+
+```json
+{
+  "method": "fs.cat",
+	"params": {
+		"path": "<path>"
+	}
+}
+```
+
+- `<path>`: the file path to print in terminal
+
+#### return value
+
+none
+
+
+
 
 ---
 
@@ -4355,6 +4502,57 @@ A man is drinking coffee.
 
 ---
 
+## hf
+
+An API to access [huggingface-cli](https://huggingface.co/docs/huggingface_hub/en/guides/cli)
+
+### hf.download
+
+Download files from huggingface
+
+#### syntax
+
+```json
+{
+  "method": "hf.download",
+  "params": {
+    "path": <executing folder path (default is the current path)>,
+    "_": [<arg1>, <arg2>, ...],
+    <kwarg1>: <val1>,
+    <kwarg2>: <val2>,
+    ...
+  }
+}
+```
+
+This is equivalent to:
+
+```
+huggingface-cli download <arg1> <arg2> --<kwarg1> <val1> --<kwarg2> <val2>
+```
+
+#### example
+
+```json
+{
+  "method": "hf.download",
+  "params": {
+    "path": "app/models",
+    "_": ["adept/fuyu-8b", "model-00001-of-00002.safetensors"],
+    "local-dir": "fuyu"
+  }
+}
+```
+
+Above script is equivalent to:
+
+
+```
+huggingface-cli download adept/fuyu-8b model-00001-of-00002.safetensors --local-dir fuyu
+```
+
+---
+
 ## local
 
 - [local.set](#localset)
@@ -4413,6 +4611,337 @@ This will set the local variables `name` and `animal`, and will print:
 ```
 Alice dog
 ```
+
+---
+
+## json
+
+- [json.set](#jsonset)
+- [json.rm](#jsonrm)
+- [json.get](#jsonget)
+
+### json.set
+
+Sets a value at an object path (can be a key path, and the key path can also include an array index)
+
+#### syntax
+
+```json
+{
+  "method": "json.set",
+  "params": {
+    <filepath1>: {
+      <key_path1>: <value1>,
+      <key_path2>: <value2>
+    }
+  }
+}
+```
+
+Where `<key_path1>`, `<key_path2>`, ... are dot `(.)` separated values where each component can be:
+
+- an array index
+- a key in JSON
+
+Some example key paths:
+
+- `config`
+- `config.api_key`
+- `config.0.key`
+
+
+#### return value
+
+none
+
+#### examples
+
+##### Create a new JSON
+
+Assuming that there's no `config.json` file in the current folder,
+
+```json
+{
+  "method": "json.set",
+  "params": {
+    "config.json": {
+      "a": 1,
+      "b": 2
+    }
+  }
+}
+```
+
+Should create a file named `config.json` and set its values to look like this:
+
+```json
+{
+  "a": 1,
+  "b": 2
+}
+```
+
+##### Updating an existing JSON
+
+Let's say the `config.json` file already has the following content:
+
+```json
+{
+  "a": 1,
+  "b": 2
+}
+```
+
+Let's say we want to set `a` to 3, and add an additional attribute named `c` whose value is 10:
+
+```json
+{
+  "method": "json.set",
+  "params": {
+    "config.json": {
+      "a": 3,
+      "c": 10
+    }
+  }
+}
+```
+
+This would set `a` to 3 and `c` to 10, resulting in the `config.json` file:
+
+```json
+{
+  "a": 3,
+  "b": 2,
+  "c": 10
+}
+```
+
+Note that the `b` attribute has not been touched.
+
+
+##### Updating a deep JSON
+
+Let's say the `config.json` looks like the following:
+
+```json
+{
+  "api": {
+    "key": "1234"
+  },
+  "endpoint": {
+    "port": "11343"
+  }
+}
+```
+
+We wish to change the `api.key` value to `xxxxx`, and `endpoint.port` to `4200`. We can achieve this with:
+
+
+```json
+{
+  "method": "json.set",
+  "params": {
+    "config.json": {
+      "api.key": "xxxx",
+      "endpoint.port": 4200
+    }
+  }
+}
+```
+
+##### Updating a deep JSON with array
+
+Let's say the `config.json` looks like the following:
+
+```json
+{
+  "numbers": [1,2,3,4]
+}
+```
+
+We wish to change the last item from `4` to `100`. We can do this with:
+
+
+```json
+{
+  "method": "json.set",
+  "params": {
+    "config.json": {
+      "numbers.3": 100
+    }
+  }
+}
+```
+
+---
+
+
+### json.rm
+
+Remove attributes from JSON
+
+#### syntax
+
+```json
+{
+  "method": "json.rm",
+  "params": {
+    <filepath1>: [<key_path1>, <key_path2>, ...],
+    <filepath2>: [<key_path1>, <key_path2>, ...]
+  }
+}
+```
+
+Where `<key_path1>`, `<key_path2>`, ... are dot `(.)` separated values where each component can be:
+
+- an array index
+- a key in JSON
+
+Some example key paths:
+
+- `config`
+- `config.api_key`
+- `config.0.key`
+
+
+#### return value
+
+none
+
+#### examples
+
+##### Simple
+
+Let's say `config.json` looks like this:
+
+```json
+{
+  "api_key": "sk_dfsfdsfdsf",
+  "port": "11343"
+}
+```
+
+If we want to remove the key `api_key`, we can run:
+
+```json
+{
+  "method": "json.rm",
+  "params": {
+    "config.json": ["api_key"]
+  }
+}
+```
+
+After running this, the `config.json` file will look like this:
+
+
+```json
+{
+  "port": "11343"
+}
+```
+
+##### Advanced
+
+Let's say `config.json` looks like this:
+
+```json
+{
+  "a": {
+    "b": {
+      "c": 1,
+      "d": 2
+    }
+  },
+  "e": 2
+}
+```
+
+If we want to remove the key `a.b.c`, we can run
+
+```json
+{
+  "method": "json.rm",
+  "params": {
+    "config.json": ["a.b.c"]
+  }
+}
+```
+
+After running this, the `config.json` file will look like this:
+
+
+```json
+{
+  "a": {
+    "b": {
+      "d": 2
+    }
+  },
+  "e": 2
+}
+```
+
+---
+
+### json.get
+
+Assign JSON file contents to local variables:
+
+#### syntax
+
+```json
+{
+  "method": "json.get",
+  "params": {
+    <key1>: <JSON_file_path1>,
+    <key2>: <JSON_file_path2>,
+    ...
+  }
+}
+```
+
+When this script is run, `local.<key1>` is set to the value of `<JSON_file_path1>`, and `local.<key2>` is set to the value of `<JSON_file_path2>`.
+
+
+#### return value
+
+none
+
+#### examples
+
+let's assume the `config.json` file looks like this:
+
+```json
+{
+  "api_key": "sk_sdfsdfdfsdfdsf"
+}
+```
+
+When we run the following script:
+
+```json
+{
+  "run": [{
+    "method": "json.get",
+    "params": {
+      "config": "config.json"
+    }
+  }, {
+    "method": "shell.run",
+    "params": {
+      "message": "python app.py",
+      "env": {
+        "OPENAI_API_KEY": "{{local.config.api_key}}"
+      }
+    }
+  }]
+}
+```
+
+1. The first stpe assigns the contents of `config.json` to the local variable `local.config`.
+2. The second step utilizes the value of `{{local.config.api_key}}`. 
+
 
 
 ---
@@ -4524,7 +5053,71 @@ will print the object in multiple lines:
 }
 ```
 
+---
 
+### json.rm
+
+Remove values at key path from a JSON
+
+#### syntax
+
+```json
+{
+  "method": "json.rm",
+  "params": {
+    <filepath1>: [<key_path1>, <key_path2>, ...]
+  }
+}
+```
+
+Where `<key_path1>`, `<key_path2>`, ... are dot `(.)` separated values where each component can be:
+
+- an array index
+- a key in JSON
+
+Some example key paths:
+
+- `config`
+- `config.api_key`
+- `config.0.key`
+
+
+#### return value
+
+none
+
+#### examples
+
+##### remove a key from a JSON file
+
+Let's say the `config.json` file looks like this:
+
+```json
+{
+  "a": 1,
+  "b": 2
+}
+```
+
+and want to delete the key `b`. we can do:
+
+```json
+{
+  "method": "json.rm",
+  "params": {
+    "config.json": ["b"]
+  }
+}
+```
+
+This would result in:
+
+
+```
+{
+  "a": 1
+}
+```
 
 ---
 
@@ -5045,9 +5638,11 @@ The `shell.run` command starts an instant shell, runs the specified commands, an
   - **if specified:** The shell keeps running until the specified pattern is met.
     - You may have multiple items in the `<shell_event_handler>` array. The first event to match will handle the event and move to the next step. An event handler object may have the following attributes:
       - `event`: a regular expression string to match.
-      - `kill` or `done`: describe the behavior for when the `event` match happens. Either kill the shell process and move on, or keep it running and move on.
+      - `kill`, `done`, or `break`: describe the behavior for when the `event` match happens. Either kill the shell process and move on, keep it running and move on, or break and stop proceeding.
         - if `done: true` is set, keep the shell and the associated processes running and move onto the next step (Useful when you use the shell to launch some process that needs to keep running, such as web servers)
         - if `kill: true` is set, kill the shell session and all processes tied to the shell session before moving onto the next step. 
+        - if `break: true` is set, stop the shell and display a blue screen (error display screen) with the matched event pattern highlighted. For example if you want to break and stop the script from proceeding when the shell encounters "Exception", you may specify `{ event: "/exception/i", break: true }`
+        - if `break: false` is set, explicitly ignore the specified event pattern. For example, by default `/Error:/` is captured, but if you want the script to ignore when the terminal encounters an `Error: not critical` pattern, you can specify `{ event: "/error: not critical/i", break: false }`.
   - **if NOT specified (default):** The shell ends only when it reaches the next terminal prompt (when all the commands have finished running, which will trigger the prompt to display at the end again). 
 - `<sudo>`: **(optional)** run in admin mode when set to `true`.
   - on mac and linux, it runs the command with `sudo <message>`
@@ -5414,7 +6009,7 @@ Explanation:
     - The `input.event` attribute is the regular expression match array from the previous step (see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match).
     - we use the `input.event[0]` to set the `local.url` local variable.
 
-###### 1. kill the shell process and move on
+###### 2. kill the shell process and move on
 
 Example:
 
@@ -5443,6 +6038,36 @@ Example:
 Same as the `done: true` case, but in this case, the `kill: true` is set, therefore when the `event` match happens, the shell session as well as all its associated processes are shut down before moving onto the next step.
 
 
+###### 3. stop the shell and display an error screen
+
+
+Example:
+
+```json
+// break.js
+module.exports = {
+  run: [{
+    method: "shell.run",
+    params: {
+      message: "{{platform === 'win32' ? 'dir' : 'ls'}}",
+      on: [{
+        event: "/break.*js/",
+        break: true
+      }]
+    }
+  }]
+}
+```
+
+Above script:
+
+1. runs "dir" (on windows) or "ls" (on linux or mac)
+2. if it encounters the pattern `/break.*js/`, it breaks with the following blue screen with the matched event `break.js` highlighted:
+
+![break.png](break.png)
+
+
+
 #### sudo
 
 Run shell commands in admin mode.
@@ -5463,6 +6088,117 @@ In this case we are trying to set the registry value, which needs to be run in a
 
 ---
 
+# Custom Script
+
+The previous section discussed some of the built-in API methods available out of the box.
+
+But you can even write your own custom JavaScript method that can be called using the same JSON-RPC syntax. There are two steps to writing your own API:
+
+
+1. Write a JavaScript class with your own custom logic.
+2. Call the JavaScript class through script.
+
+## Quickstart
+
+### 1. Write an API in JavaScript
+
+The JavaScript file is where all the logic is written. It must follow the following convention:
+
+```javascript
+// api.js
+// The class name can be anything, it doesn't matter
+const fs = require('fs')
+class API {
+  // req: the request object, where the request.params contains the arguments passed in from an external script
+  // ondata: can be used to print to the terminal
+  // kernel: direct access to the kernel
+  async custom_method(req, ondata, kernel) => {
+    // Do stuff here. Here's an example
+    let res = await fetch(req.params.url).then((res) => {
+      return res.json()
+    })
+    await fs.promises.writeFile("result.json", JSON.stringify(res))
+  }
+}
+module.exports = API
+```
+
+### 2. Call the API from Script
+
+Now that we've written the logic, we can call it from any Pinokio script. The syntax is the same JSON-RPC syntax.
+
+```json
+{
+  "method": <method_name>,
+  "uri": <file_path>,
+  "params": <params>
+}
+```
+
+The difference in this case is, we have an additional `uri` attribute.
+
+- `<method_name>`: The method name to call
+- `<file_path>`: THe file path that contains the API class
+- `<params>: The parameters to pass into the API class via `req.params`
+
+For example, to call the `custom_method()` method in the `API` class above, we can do:
+
+```json
+{
+  "run": [{
+    "uri": "api.js",
+    "method": "custom_method",
+    "params": {
+      "url": "https://jsonplaceholder.typicode.com/todos/1"
+    }
+  }]
+}
+```
+
+This will call the `custom_method()` of the `API` class inside the `api.js` file.
+
+It will pass in `https://jsonplaceholder.typicode.com/todos/1` through the params, so the `req.params.url` will be `https://jsonplaceholder.typicode.com/todos/1`.
+
+## Example
+
+### Writing a browser automation API
+
+Let's say you want to write an API that accepts a URL and opens that URL in a browser automatically.
+
+We can use the `kernel.playwright` variable to use the [Playwright](https://playwright.dev/) that is included in Pinokio kernel. Let's create a `browser.js` file:
+
+```javascript
+// browser.js
+class Browser {
+  async open(req, ondata, kernel) {
+    let { firefox } = kernel.playwright
+    const browser = await firefox.launch({ headless: false, });
+    const context = await browser.newContext({ viewport: null })
+    const page = await context.newPage()
+    await page.goto(req.params.url)
+  }
+}
+module.exports = Browser
+```
+
+Now we can call this from a script:
+
+```json
+{
+  "run": [{
+    "uri": "browser.js",
+    "method": "open",
+    "params": {
+      "url": "https://pinokio.computer"
+    }
+  }]
+}
+```
+
+This will pass in `req.params.url` as `https://pinokio.computer` into the `open()` method in the `browser.js` class, which automatically launches a firefox browser and navigates to the `req.params.url` URL.
+
+
+---
 
 # UI
 
@@ -5538,6 +6274,11 @@ module.exports = {
     - `icon`: The icon file path to display for the item.
     - `description`: The description.
     - `href`: The URL to open.
+    - `fs`: open the file in a file explorer or the default app.
+      - if set to `"open"`, opens the file
+      - if set to `"view"`, opens in file explorer
+      - if set to `true`, same as `"view"`. opens in file explorer.
+     
 - `<start>`: start script declaration. 
     - Types: can be a `string` or an `object`.
       - string: `url`
@@ -5886,3 +6627,170 @@ GRADIO_TEMP_DIR=./cache/GRADIO
 ```
 
 These variables will be immediately available for editing in the `Configure` menu, and whenever run any script from the repository, these custom environment variables will be automatically applied.
+
+
+---
+
+# Customization
+
+## File System
+
+Place custom files under your `PINOKIO_HOME/web` folder as follows:
+
+```
+~/pinokio
+  /web
+    config.json       # configure app chrome UI (close button, etc)
+    /public           # Static Files
+      browser.css     # Custom CSS for App Browser Page
+      ...
+    /views            # template files
+      index.ejs       # home page template file
+```
+
+1. `index.ejs`: This is the home page template file. The template can display all the installed applications in whichever way you want.
+2. `browser.css`: If you want to customize the app page style, you can override the default theme by overwriting CSS attributes in `browser.css`.
+
+## Home Page
+
+To customize the home page, you can write your own custom `index.ejs`. The template file can display the installed apps using the following attributes:
+
+- `kernel`: kernel API
+- `agent`: **"electron"** (running as an app) or **"web"** (running as a server)
+- `items`: An array of installed app items
+  - `icon`: `icon` value in `pinokio.js`
+  - `name`: `name` value in `pinokio.js`
+  - `description`: `description` value in `pinokio.js`
+  - `path`: folder path
+  - `url`: The app's URL. Open this URL to visit the app page.
+  - `browse_url`: App URL WITHOUT running (Even if `PINOKIO_SCRIPT_DEFAULT` is set to **true**, it won't autorun)
+  - `running`: `true` (if currently running) or `false`
+  - `running_scripts`: An array of scripts that are currently running. Each item is made up of the following attributes:
+    - `path`: The file path of the script that's running
+    - `name`: The file name
+
+You can do this by adding your own `/web/views/index.ejs` file. Here's an example:
+
+```html
+<html>
+  <body>
+    <header class='grabbable'></header>
+    <main>
+      <% items.forEach((item) => { %>
+        <% if (item.running) { %>
+          <a class='item running' data-browse-url="<%=item.browse_url%>" data-href="<%=item.url%    >" onclick="dblclick(event)">
+            <img src="<%=item.icon%>"/>
+            <div class='name'><%=item.name%></div>
+          </a>
+        <% } else { %>
+          <a class='item' data-browse-url="<%=item.browse_url%>" data-href="<%=item.url%>" data-    name="<%=item.name%>" data-description="<%=item.description%>" data-path="<%=item.path%>"     onclick="dblclick(event)">
+            <% if (item.icon) { %>
+              <img src="<%=item.icon%>"/>
+            <% } else { %>
+              <img src="icon.png"/>
+            <% } %>
+            <div class='name'><%=item.name%></div>
+          </a>
+        <% } %>
+      <% }) %>
+    </main>
+  </body>
+</html>
+```
+
+---
+
+## App Page
+
+Each app page can be customized too.
+
+Unlike the Home page, which can be completely customized with your own HTML, the app page currently allows only CSS customization.
+
+You can do this by adding your own `/web/public/browser.css` file. Here's an example:
+
+```css
+body {
+  background: firebrick !important;
+  color: gold !important;
+}
+aside {
+  background: transparent !important;
+}
+nav {
+  background: none !important;
+}
+.header-item.btn {
+  color: gold !important;
+}
+.btn2 {
+  color: gold !important;
+}
+```
+
+![theme.png](theme.png)
+
+---
+
+## Title Bar 
+
+
+You can customize the title bar `color` and `symbolColor` (See https://www.electronjs.org/docs/latest/tutorial/custom-title-bar#custom-window-controls)
+
+Just need to specify those attributes inside the `web/config.json` file
+
+```json
+{
+  "color": "rgba(255,255,255,0)",
+  "symbolColor": "white"
+}
+```
+
+---
+
+## Terminal
+
+![customize_xterm.png](customize_xterm.png)
+
+You can fully customize the terminal by setting the `xterm` attribute in the `web/config.json` file:
+
+
+
+```json
+{
+  "color": "rgba(255,255,255,0)",
+  "symbolColor": "white",
+  "xterm": {
+    "fontSize": 20,
+    "theme": {
+      "foreground": "#637d75",
+      "background": "#0f1610",
+      "cursor": "#73fa91",
+
+      "black": "#112616",
+      "brightBlack": "#3c4812",
+
+      "red": "#7f2b27",
+      "brightRed": "#e08009",
+
+      "green": "#2f7e25",
+      "brightGreen": "#18e000",
+
+      "yellow": "#717f24",
+      "brightYellow": "#bde000",
+
+      "blue": "#2f6a7f",
+      "brightBlue": "#00aae0",
+
+      "magenta": "#47587f",
+      "brightMagenta": "#0058e0",
+
+      "cyan": "#327f77",
+      "brightCyan": "#00e0c4",
+
+      "white": "#647d75",
+      "brightWhite": "#73fa91"
+
+    }
+  }
+}
+```
