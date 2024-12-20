@@ -61,7 +61,7 @@ Make sure to follow **ALL steps below!**
 
 #### Step 1. Download
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.0.26/Pinokio-3.0.26-win32.zip'><i class="fa-brands fa-windows"></i> Download for Windows</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.0.31/Pinokio-3.0.31-win32.zip'><i class="fa-brands fa-windows"></i> Download for Windows</a>
 
 #### Step 2. Unzip
 
@@ -85,23 +85,19 @@ To bypass this,
 
 ## Mac
 
-Make sure to follow **BOTH step 1 AND step 2.**
 
 #### Step 1. Download
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.0.26/Pinokio-3.0.26-arm64.dmg'><i class="fa-brands fa-apple"></i> Download for Apple Silicon Mac (M1/M2/M3/M4)</a>&nbsp;&nbsp;<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.0.26/Pinokio-3.0.26.dmg'><i class="fa-brands fa-apple"></i> Download for Intel Mac</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.0.31/Pinokio-3.0.31-darwin-arm64.zip'><i class="fa-brands fa-apple"></i> Download for Apple Silicon Mac (M1/M2/M3/M4)</a>&nbsp;&nbsp;<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.0.31/Pinokio-3.0.31-darwin-intel.zip'><i class="fa-brands fa-apple"></i> Download for Intel Mac</a>
 
 
 #### Step 2. Install (IMPORTANT!!)
 
-After downloading the dmg files, **you MUST make a patch**, as shown below:
+![background.gif](background.gif)
 
-1. Run the downloaded DMG installer file
-2. Drag the "Pinokio" app to the Applications folder
-3. Run the "patch.command"
-4. Open the Pinokio app in the applications folder
+The Pinokio Mac installer ships with [Sentinel](https://itsalin.com/appInfo/?id=sentinel) built in. Sentinel lets you run open source apps that are NOT on the Apple App store (which Pinokio is at the moment).
 
-![mac_install.gif](mac_install.gif)
+You just need to drag and drop the installed Pinokio.app onto Sentinel to "Remove app from Quarantine".
 
 
 ---
@@ -110,7 +106,7 @@ After downloading the dmg files, **you MUST make a patch**, as shown below:
 
 For linux, you can download and install directly from the latest release on Github (Scroll down to the bottom of the page for all the binaries):
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/3.0.26'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/3.0.31'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
 
 ---
 
