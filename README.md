@@ -61,7 +61,7 @@ Make sure to follow **ALL steps below!**
 
 #### Step 1. Download
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.6.7/Pinokio-3.6.7-win32.zip'><i class="fa-brands fa-windows"></i> Download for Windows</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.6.23/Pinokio-3.6.23-win32.zip'><i class="fa-brands fa-windows"></i> Download for Windows</a>
 
 #### Step 2. Unzip
 
@@ -88,7 +88,7 @@ To bypass this,
 
 #### Step 1. Download
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.6.7/Pinokio-3.6.7-darwin-arm64.zip'><i class="fa-brands fa-apple"></i> Download for Apple Silicon Mac (M1/M2/M3/M4)</a>&nbsp;&nbsp;<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.6.7/Pinokio-3.6.7-darwin-intel.zip'><i class="fa-brands fa-apple"></i> Download for Intel Mac</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.6.23/Pinokio-3.6.23-darwin-arm64.zip'><i class="fa-brands fa-apple"></i> Download for Apple Silicon Mac (M1/M2/M3/M4)</a>&nbsp;&nbsp;<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/download/3.6.23/Pinokio-3.6.23-darwin-intel.zip'><i class="fa-brands fa-apple"></i> Download for Intel Mac</a>
 
 
 #### Step 2. Install (IMPORTANT!!)
@@ -106,7 +106,7 @@ You just need to drag and drop the installed Pinokio.app onto Sentinel to "Remov
 
 For linux, you can download and install directly from the latest release on Github (Scroll down to the bottom of the page for all the binaries):
 
-<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/3.6.7'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
+<a class='btn' href='https://github.com/pinokiocomputer/pinokio/releases/tag/3.6.23'><i class="fa-brands fa-linux"></i> Go to the Releases Page</a>
 
 ---
 
