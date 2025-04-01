@@ -841,7 +841,7 @@ To do this, simply create a `pinokio_meta.json` file, with a `posts` array attri
 }
 ```
 
-You can see it in action: https://github.com/cocktailpeanutlabs/comfyui/blob/main/pinokio_meta.json
+You can see it in action: https://github.com/pinokiofactory/wan/blob/main/pinokio_meta.json
 
 Once you publish, this will be immediately reflected on the script landing page.
 
@@ -6206,18 +6206,36 @@ Just like `scripts`, you can write a UI using nothing but JSON (or JavaScript).
 
 ## components
 
-For every project, you just need to think about two UI components:
+For every project, you just need to think about three UI components:
 
-1. **shortcut:** displayed on the home page.
-2. **app:** The actual UI layout.
+1. **shortcut:** displayed on the home page. Can be configured with [pinokio.js](#pinokiojs)
+2. **app:** The actual UI layout. Can be configured with [pinokio.js](#pinokiojs)
+3. **info:** listed on the discover page and on https://pinokio.computer. Can be configured with [pinokio_meta.json](#pinokio_metajson)
 
-### shortcut
+### 1. shortcut
+
+how the app is displayed on pinokio once downloaded. You can script this with [pinokio.js](#pinokiojs)
 
 ![ui0.png](ui0.png)
 
-### app
+### 2. app
+
+what the installed app page looks like.
+
+You can script this with [pinokio.js](#pinokiojs).
 
 ![ui1.png](ui1.png)
+
+### 3. info
+
+how the app is displayed on the discover page and on https://pinokio.computer.
+
+You can script this with [pinokio_meta.json](#pinokio_metajson).
+
+![ui2.png](ui2.png)
+
+---
+
 
 ## pinokio.js
 
@@ -6493,6 +6511,147 @@ module.exports = {
       }]
     }
   }
+}
+```
+
+---
+
+## pinokio_meta.json
+
+### syntax
+
+```json
+{
+  "posts": [
+    <x.com url>,
+    <x.com url>,
+    ...
+  }]
+  "links": [
+    {
+      "title": <title>
+      "value": <value>
+    },
+    {
+      "title": <title>
+      "links": [
+        {
+          "title": <title>
+          "value": <value>
+        },
+        ...
+      ]
+    },
+    ...
+  ]
+}
+```
+
+- `"posts"`: the items in this array will be displayed in the Newsfeed section.
+  - `<x.com url>`: include any x.com post here and they will be rendered in the Newsfeed section.
+- `"links"`: the items in this array will be displayed in the right sidebar on the info page.
+  - `<title>`: The title of the link
+  - `<value>`: The URL of the link
+  - `<links>`: Create a nested `"links"` array
+
+---
+
+### examples
+
+> Before we go in, you can check out an actual pinokio_meta.json in production at:
+> https://github.com/pinokiofactory/wan/blob/main/pinokio_meta.json
+>
+> and the published result at: https://pinokio.computer/item?uri=https://github.com/pinokiofactory/wan
+
+#### Newsfeed
+
+The newsfeed section can be populated simply by adding x.com links to the `"posts"` array in the `pinokio_meta.json` file:
+
+![feed.png](feed.png)
+
+```json
+{
+  "posts": [
+    "https://x.com/cocktailpeanut/status/1901791032947450088",
+    "https://x.com/cocktailpeanut/status/1901748455418347554",
+    "https://x.com/cocktailpeanut/status/1901698217831703023",
+    "https://x.com/TheAwakenOne619/status/1901389626931318923",
+    "https://x.com/cocktailpeanut/status/1901373187667222923",
+    "https://x.com/hasigoki/status/1901296301301731620",
+    "https://x.com/cocktailpeanut/status/1901092072263922062",
+    "https://x.com/cocktailpeanut/status/1901058105934573799",
+    "https://x.com/cocktailpeanut/status/1900995261947932714",
+    "https://x.com/cocktailpeanut/status/1901037301989515373",
+    "https://x.com/cocktailpeanut/status/1900630168638812243",
+    "https://x.com/cocktailpeanut/status/1900603261352374405",
+    "https://x.com/cocktailpeanut/status/1900589434153869378",
+    "https://x.com/Gun_ther/status/1900363944578990399",
+    "https://x.com/napoleon21st/status/1900423646960902614",
+    "https://x.com/GorillaRogueGam/status/1900956591530103110",
+    "https://x.com/DavidFSWD/status/1901096862352110092",
+    "https://x.com/cocktailpeanut/status/1900237861955527161",
+    "https://x.com/cocktailpeanut/status/1897017429433442429",
+    "https://x.com/dgoldwas/status/1897005272453054671",
+    "https://x.com/dgoldwas/status/1896999854418940049",
+    "https://x.com/cocktailpeanut/status/1896977467031871632",
+    "https://x.com/cocktailpeanut/status/1896968455280349548",
+    "https://x.com/lmontoya/status/1896837315634557412",
+    "https://x.com/Teslanaut/status/1896837830099468759",
+    "https://x.com/deepbeepmeep/status/1896681152024563765",
+    "https://x.com/cocktailpeanut/status/1896669569626099988",
+    "https://x.com/deepbeepmeep/status/1896264231122772069"
+  ]
+}
+```
+
+#### Links
+
+##### Simple Info Links
+
+Just by setting the `"links"` array, you can display as many links as you want:
+
+![links0.png](links0.png)
+
+```json
+{
+  "links": [{
+    "title": "Github",
+    "value": "https://github.com/ai-anchorite"
+  }]
+}
+```
+
+
+##### Nested Info Links
+
+Sometimes you want to add some structure to the links by creating multiple sections. You can simply nest the `"links"` array inside a `"links"` array to achieve this:
+
+![links1.png](links1.png)
+
+```json
+{
+  "links": [{
+    "title": "deepbeepmeep (wrote the app)",
+    "links": [{
+      "title": "X",
+      "value": "https://x.com/deepbeepmeep"
+    }, {
+      "title": "Github",
+      "value": "https://github.com/deepbeepmeep"
+    }]
+  }, {
+    "title": "cocktailpeanut (wrote the launcher)",
+    "links": [{
+      "title": "X",
+      "value": "https://x.com/cocktailpeanut"
+    }, {
+      "title": "Github",
+      "value": "https://github.com/cocktailpeanut"
+    }, {
+      "title": "Discord",
+      "value": "https://discord.gg/TQdNwadtE4"
+    }]
+  }]
 }
 ```
 
