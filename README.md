@@ -2775,6 +2775,26 @@ The current script uri
 
 ---
 
+## port
+
+The next available port.
+
+This can be used to automatically figure out a free port and use it to launch an app. Here's an example:
+
+```json
+{
+  "run": [{
+    "method": "shell.run",
+    "params": {
+      "venv": "env",
+      "message": "python app.py --port {{port}}"
+    }
+  }]
+}
+```
+
+---
+
 ## cwd
 
 The path of the currently running script
@@ -2957,9 +2977,87 @@ In the above script,
 
 The kernel JavaScript API
 
+- `kernel.which()`: return the absolute path of any given command. if the command doesn't exist under PATH, returns null.
 - `kernel.exists()`: check if a path exists
+- `kernel.path()`: given a relative path within pinokio, resolve its absolute path
 - `kernel.script.running()`: check if a script at specified path is currently running
 - `kernel.script.local()`: get the local variables of a script (if running)
+
+
+### kernel.which
+
+Check whether a command exists (can be run in a terminal), and if so, return the absolute path. If it doesn't exist, return null.
+
+#### syntax
+
+```
+let command_path = kernel.which(command)
+```
+
+- `command`: The command to check (for example `ls`, `dir`, `code`, etc.)
+- `command_path`: The absolute path of the command if it exists. Otherwise `null`.
+
+#### examples
+
+##### run command if it exists
+
+```json
+{
+  "run": [{
+    "when": "{{which('winget')}}",
+    "method": "shell.run",
+    "params": {
+      "sudo": true,
+      "message": "winget install --id=eSpeak-NG.eSpeak-NG -e --silent --accept-source-agreements --accept-package-agreements"
+    }
+  }]
+}
+```
+
+##### inside JS
+
+```js
+module.exports = async (kernel) => {
+  let env = {}
+  if (kernel.platform === "win32") {
+    // get the espeak-ng path
+    let espeakPath = kernel.which("espeak-ng")
+
+    // get the installation folder path for espeak-ng
+    let espeakRoot = path.dirname(espeakPath)
+
+    // set environment variables
+    env.PHONEMIZER_ESPEAK_PATH = espeakRoot
+    env.PHONEMIZER_ESPEAK_LIBRARY = path.resolve(espeakRoot, "libespeak-ng.dll")
+    env.ESPEAK_DATA_PATH = path.resolve(espeakRoot, "espeak-ng-data")
+    let LIBPATH = kernel.bin.path("miniconda/libs")
+    env.LINK = `/LIBPATH:${LIBPATH}`
+  }
+  return {
+    daemon: true,
+    run: [{
+      method: "shell.run",
+      params: {
+        env: env,
+        venv: "env",
+        path: "app",
+        message: "python app.py",
+        on: [{
+          // The regular expression pattern to monitor.
+          // When this pattern occurs in the shell terminal, the shell will return,
+          // and the script will go onto the next step.
+          "event": "/http:\/\/\\S+/",   
+
+          // "done": true will move to the next step while keeping the shell alive.
+          // "kill": true will move to the next step after killing the shell.
+          "done": true
+        }]
+      }
+    }]
+  }
+}
+```
+
 
 ### kernel.exists
 
@@ -3028,6 +3126,36 @@ module.exports = {
       }]
     }
   }
+}
+```
+
+### kernel.path
+
+Get the absolute path
+
+#### syntax
+
+```
+let absolute_path = kernel.path(...pathChunks)
+```
+
+- `pathChunks`: any number of path chunks.
+  - the chunks will be combined to resolve the full path (Internally using the node.js `path.resolve(...pathChunks)`)
+  - The chunks must resolve to an absolute path when combined.
+
+#### examples
+
+##### check if a path exists, and run the script if it exists
+
+```json
+{
+  "run": [{
+    "when": "{{kernel.exists(kernel.path('api/comfy/start.js'))}}",
+    "method": "script.start",
+    "params": {
+      "uri": "{{kernel.path('api/comfy/start.js')}}"
+    }
+  }]
 }
 ```
 
